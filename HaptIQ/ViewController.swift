@@ -1,37 +1,23 @@
-//
-//  ViewController.swift
-//  HaptIQ
-//
-//  Created by Shreyansh on 29/10/25.
-//
-
 import UIKit
 
 class ViewController: UIViewController {
 
-    let label = UILabel()
-    let button = UIButton(type: .system)
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .white
+        for family in UIFont.familyNames {
+            print("Family: \(family)")
+            for name in UIFont.fontNames(forFamilyName: family) {
+                print("   \(name)")
+            }
+        }
         
-        // Label setup
-        label.text = "Hello, UIKit!"
-        label.textAlignment = .center
-        label.font = UIFont.systemFont(ofSize: 24)
-        label.frame = CGRect(x: 50, y: 200, width: 300, height: 50)
+        let label = UILabel()
+        label.text = "Hello, Custom Font!"
+        label.font = UIFont(name: "WinniePERSONALUSE", size: 28)
+        label.textColor = .systemPink
+        label.frame = CGRect(x: 40, y: 100, width: 350, height: 50)
         view.addSubview(label)
-        
-        // Button setup
-        button.setTitle("Change Text", for: .normal)
-        button.frame = CGRect(x: 100, y: 300, width: 200, height: 50)
-        button.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
-        view.addSubview(button)
-    }
-    
-    @objc func buttonTapped() {
-        label.text = "You tapped the button!"
     }
 }
+
