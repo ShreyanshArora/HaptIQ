@@ -16,7 +16,7 @@ class HomeViewController: UIViewController {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Haptic Hunt"
-        label.font = UIFont.systemFont(ofSize: 48, weight: .black)
+        label.font = UIFont(name: "WinniePERSONALUSE", size: 65)
         label.textColor = .white
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -26,7 +26,7 @@ class HomeViewController: UIViewController {
     private let subtitleLabel: UILabel = {
         let label = UILabel()
         label.text = "Trust no one. Outsmart your friends"
-        label.font = UIFont.systemFont(ofSize: 18, weight: .bold)
+        label.font = UIFont(name: "WinniePERSONALUSE", size: 25)
         label.textColor = .white
         label.textAlignment = .center
         label.numberOfLines = 2
@@ -48,7 +48,7 @@ class HomeViewController: UIViewController {
     private let statusLabel: UILabel = {
         let label = UILabel()
         label.text = "Scanning for imposter..."
-        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        label.font = UIFont(name: "WinniePERSONALUSE", size: 20)
         label.textColor = .white
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
