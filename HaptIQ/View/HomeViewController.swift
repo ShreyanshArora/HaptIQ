@@ -1,15 +1,14 @@
 import UIKit
 
-class ViewController: UIViewController {
+class HomeViewController: UIViewController {
     
     // MARK: - UI Components
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.image = UIImage(systemName: "person.fill")?.withConfiguration(
-            UIImage.SymbolConfiguration(pointSize: 120, weight: .regular)
-        )
+        imageView.image = UIImage(named: "Mafia1")
+        imageView.contentMode = .scaleToFill
         imageView.tintColor = UIColor(red: 0.8, green: 0.1, blue: 0.1, alpha: 1.0)
         return imageView
     }()
@@ -17,7 +16,7 @@ class ViewController: UIViewController {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Haptic Hunt"
-        label.font = UIFont.systemFont(ofSize: 48, weight: .black)
+        label.font = UIFont(name: "WinniePERSONALUSE", size: 65) ?? UIFont.systemFont(ofSize: 65, weight: .bold)
         label.textColor = .white
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -27,7 +26,7 @@ class ViewController: UIViewController {
     private let subtitleLabel: UILabel = {
         let label = UILabel()
         label.text = "Trust no one. Outsmart your friends"
-        label.font = UIFont.systemFont(ofSize: 18, weight: .bold)
+        label.font = UIFont(name: "WinniePERSONALUSE", size: 28)
         label.textColor = .white
         label.textAlignment = .center
         label.numberOfLines = 2
@@ -49,7 +48,7 @@ class ViewController: UIViewController {
     private let statusLabel: UILabel = {
         let label = UILabel()
         label.text = "Scanning for imposter..."
-        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        label.font = UIFont(name: "WinniePERSONALUSE", size: 20)
         label.textColor = .white
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -126,14 +125,14 @@ class ViewController: UIViewController {
         }
         
         // Pulse icon
-        let pulse = CABasicAnimation(keyPath: "transform.scale")
-        pulse.duration = 1.5
-        pulse.fromValue = 1.0
-        pulse.toValue = 1.1
-        pulse.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-        pulse.autoreverses = true
-        pulse.repeatCount = .infinity
-        iconImageView.layer.add(pulse, forKey: "pulse")
+//        let pulse = CABasicAnimation(keyPath: "transform.scale")
+//        pulse.duration = 1.5
+//        pulse.fromValue = 1.0
+//        pulse.toValue = 1.1
+//        pulse.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+//        pulse.autoreverses = true
+//        pulse.repeatCount = .infinity
+//        iconImageView.layer.add(pulse, forKey: "pulse")
         
         // Fade status label
         UIView.animate(withDuration: 1.0, delay: 0, options: [.repeat, .autoreverse]) {

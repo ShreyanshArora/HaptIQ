@@ -24,9 +24,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		7563F74A2EB619770041BAD2 /* HaptIQ.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = HaptIQ.app; path = "/Users/anuj/Downloads/Developer/HaptIQ/build/Debug-iphoneos/HaptIQ.app"; sourceTree = "<absolute>"; };
-		7563F74B2EB619770041BAD2 /* HaptIQTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = HaptIQTests.xctest; path = "/Users/anuj/Downloads/Developer/HaptIQ/build/Debug-iphoneos/HaptIQ.app/PlugIns/HaptIQTests.xctest"; sourceTree = "<absolute>"; };
-		7563F74C2EB619770041BAD2 /* HaptIQUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = HaptIQUITests.xctest; path = "/Users/anuj/Downloads/Developer/HaptIQ/build/Debug-iphoneos/HaptIQUITests-Runner.app/PlugIns/HaptIQUITests.xctest"; sourceTree = "<absolute>"; };
+		7563F7A42EB65E330041BAD2 /* HaptIQ.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HaptIQ.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7563F7A52EB65E330041BAD2 /* HaptIQTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HaptIQTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7563F7A62EB65E330041BAD2 /* HaptIQUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HaptIQUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -91,6 +91,9 @@
 				E11568602EB1591C00E0B24B /* HaptIQ */,
 				E11568772EB1591E00E0B24B /* HaptIQTests */,
 				E11568812EB1591E00E0B24B /* HaptIQUITests */,
+				7563F7A42EB65E330041BAD2 /* HaptIQ.app */,
+				7563F7A52EB65E330041BAD2 /* HaptIQTests.xctest */,
+				7563F7A62EB65E330041BAD2 /* HaptIQUITests.xctest */,
 			);
 			sourceTree = "<group>";
 		};
@@ -116,7 +119,7 @@
 			packageProductDependencies = (
 			);
 			productName = HaptIQ;
-			productReference = 7563F74A2EB619770041BAD2 /* HaptIQ.app */;
+			productReference = 7563F7A42EB65E330041BAD2 /* HaptIQ.app */;
 			productType = "com.apple.product-type.application";
 		};
 		E11568732EB1591E00E0B24B /* HaptIQTests */ = {
@@ -139,7 +142,7 @@
 			packageProductDependencies = (
 			);
 			productName = HaptIQTests;
-			productReference = 7563F74B2EB619770041BAD2 /* HaptIQTests.xctest */;
+			productReference = 7563F7A52EB65E330041BAD2 /* HaptIQTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		E115687D2EB1591E00E0B24B /* HaptIQUITests */ = {
@@ -162,7 +165,7 @@
 			packageProductDependencies = (
 			);
 			productName = HaptIQUITests;
-			productReference = 7563F74C2EB619770041BAD2 /* HaptIQUITests.xctest */;
+			productReference = 7563F7A62EB65E330041BAD2 /* HaptIQUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
