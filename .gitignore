@@ -1,0 +1,23 @@
+# Xcode build files
+DerivedData/
+build/
+
+# User-specific settings
+xcuserdata/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.xcuserdatad
+
+# macOS system files
+.DS_Store
+
+# Swift Package Manager
+/.build/
+Packages/
+Package.resolved
+
+# Xcode’s temporary files
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa

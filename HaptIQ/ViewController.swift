@@ -13,9 +13,9 @@ class ViewController: UIViewController {
         }
         
         let label = UILabel()
-        label.text = "Hello, Custom Font!"
+        label.text = "Hello, Haptiq!"
         label.font = UIFont(name: "WinniePERSONALUSE", size: 28)
-        label.textColor = .systemPink
+        label.textColor = .systemBlue
         label.frame = CGRect(x: 40, y: 100, width: 350, height: 50)
         view.addSubview(label)
     }
