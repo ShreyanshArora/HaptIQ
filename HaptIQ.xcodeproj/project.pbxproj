@@ -6,6 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E115690E2EB5267E00E0B24B /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = E115690D2EB5267E00E0B24B /* FirebaseAI */; };
+		E11569102EB5267E00E0B24B /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = E115690F2EB5267E00E0B24B /* FirebaseAnalytics */; };
+		E11569122EB5267E00E0B24B /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = E11569112EB5267E00E0B24B /* FirebaseDatabase */; };
+		E11569142EB5267E00E0B24B /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = E11569132EB5267E00E0B24B /* FirebaseFirestore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		E11568752EB1591E00E0B24B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -37,6 +44,20 @@
 			);
 			target = E115685D2EB1591C00E0B24B /* HaptIQ */;
 		};
+		E11569092EB5227A00E0B24B /* Exceptions for "HaptIQUITests" folder in "HaptIQ" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"GoogleService-Info.plist",
+			);
+			target = E115685D2EB1591C00E0B24B /* HaptIQ */;
+		};
+		E115690A2EB5227A00E0B24B /* Exceptions for "HaptIQUITests" folder in "HaptIQTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"GoogleService-Info.plist",
+			);
+			target = E11568732EB1591E00E0B24B /* HaptIQTests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -55,6 +76,10 @@
 		};
 		E11568812EB1591E00E0B24B /* HaptIQUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E11569092EB5227A00E0B24B /* Exceptions for "HaptIQUITests" folder in "HaptIQ" target */,
+				E115690A2EB5227A00E0B24B /* Exceptions for "HaptIQUITests" folder in "HaptIQTests" target */,
+			);
 			path = HaptIQUITests;
 			sourceTree = "<group>";
 		};
@@ -65,6 +90,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E11569122EB5267E00E0B24B /* FirebaseDatabase in Frameworks */,
+				E11569142EB5267E00E0B24B /* FirebaseFirestore in Frameworks */,
+				E11569102EB5267E00E0B24B /* FirebaseAnalytics in Frameworks */,
+				E115690E2EB5267E00E0B24B /* FirebaseAI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,6 +154,10 @@
 			);
 			name = HaptIQ;
 			packageProductDependencies = (
+				E115690D2EB5267E00E0B24B /* FirebaseAI */,
+				E115690F2EB5267E00E0B24B /* FirebaseAnalytics */,
+				E11569112EB5267E00E0B24B /* FirebaseDatabase */,
+				E11569132EB5267E00E0B24B /* FirebaseFirestore */,
 			);
 			productName = HaptIQ;
 			productReference = E115685E2EB1591C00E0B24B /* HaptIQ.app */;
@@ -208,6 +241,10 @@
 			);
 			mainGroup = E11568552EB1591C00E0B24B;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				E115690B2EB522CF00E0B24B /* XCRemoteSwiftPackageReference "swift-algorithms" */,
+				E115690C2EB5267E00E0B24B /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E115685F2EB1591C00E0B24B /* Products */;
 			projectDirPath = "";
@@ -292,6 +329,7 @@
 				DEVELOPMENT_TEAM = 85VW23JNCW;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HaptIQ/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -320,6 +358,7 @@
 				DEVELOPMENT_TEAM = 85VW23JNCW;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HaptIQ/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -569,6 +608,48 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E115690B2EB522CF00E0B24B /* XCRemoteSwiftPackageReference "swift-algorithms" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-algorithms.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.2.1;
+			};
+		};
+		E115690C2EB5267E00E0B24B /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.5.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E115690D2EB5267E00E0B24B /* FirebaseAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E115690C2EB5267E00E0B24B /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAI;
+		};
+		E115690F2EB5267E00E0B24B /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E115690C2EB5267E00E0B24B /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		E11569112EB5267E00E0B24B /* FirebaseDatabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E115690C2EB5267E00E0B24B /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseDatabase;
+		};
+		E11569132EB5267E00E0B24B /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E115690C2EB5267E00E0B24B /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E11568562EB1591C00E0B24B /* Project object */;
 }
