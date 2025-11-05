@@ -172,3 +172,6 @@ class HomeViewController: UIViewController {
     }
 }
 
+#Preview{
+    HomeViewController()
+}
