@@ -2,9 +2,9 @@ import Foundation
 import FirebaseFirestore
 
 class RoomManager {
-    static let shared = RoomManager()   // ✅ Singleton accessor
+    static let shared = RoomManager()
 
-    private init() {}                   // ✅ Prevent outside init
+    private init() {}
     private let db = Firestore.firestore()
     
     enum RoomError: Error {

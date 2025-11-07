@@ -14,7 +14,7 @@ final class CreateRoomViewController: UIViewController {
         let l = UILabel()
         l.text = "Share this code with your friends"
         l.textColor = .white
-        l.font = .systemFont(ofSize: 18, weight: .semibold)
+        l.font = UIFont(name: "WinniePERSONALUSE", size: 18)
         l.textAlignment = .center
         l.numberOfLines = 2
         return l
@@ -26,7 +26,7 @@ final class CreateRoomViewController: UIViewController {
         l.text = "CREATE ROOM"
         l.textColor = .white
         l.textAlignment = .center
-        l.font = .systemFont(ofSize: 22, weight: .bold)
+        l.font = UIFont(name: "WinniePERSONALUSE", size: 22)
         return l
     }()
 
