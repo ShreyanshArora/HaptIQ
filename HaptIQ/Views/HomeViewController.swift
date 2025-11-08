@@ -151,12 +151,11 @@ class HomeViewController: UIViewController {
     }
     
     private func showMainScreen() {
-        // Replace this with your actual main view controller
-        let mainVC = UIViewController()
+        
+        let mainVC = JoinRoomViewController()
         mainVC.view.backgroundColor = .systemBackground
         mainVC.title = "Main Screen"
         
-      
         navigationController?.setViewControllers([mainVC], animated: true)
     }
     

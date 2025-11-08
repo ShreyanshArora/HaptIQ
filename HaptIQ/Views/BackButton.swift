@@ -5,7 +5,7 @@ extension UIViewController {
     func addFigmaBackButton() -> UIButton {
         let back = UIButton(type: .system)
         back.translatesAutoresizingMaskIntoConstraints = false
-        back.backgroundColor = UIColor(red: 0.69, green: 0.03, blue: 0.03, alpha: 0.85) // #AF0909 @ 85%
+        back.backgroundColor = UIColor(red: 0.69, green: 0.03, blue: 0.03, alpha: 0.85) 
         back.layer.cornerRadius = 21
         back.tintColor = .white
         back.setImage(UIImage(systemName: "chevron.left"), for: .normal)

@@ -9,7 +9,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         FirebaseApp.configure()
-        print("✅ Firebase configured successfully")
+        print("Firebase configured successfully")
 
         // Test connection
         let db = Firestore.firestore()
