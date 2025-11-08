@@ -14,19 +14,29 @@ final class CreateRoomViewController: UIViewController {
         let l = UILabel()
         l.text = "Share this code with your friends"
         l.textColor = .white
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 18)
+        l.font = UIFont(name: "WinniePERSONALUSE", size: 26)
         l.textAlignment = .center
         l.numberOfLines = 2
         return l
     }()
 
-    private let card = UIView()
+    private let card: UIView = {
+        let view = UIView()
+        view.layer.cornerRadius = 25
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOpacity = 0.25
+        view.layer.shadowRadius = 8
+        view.layer.shadowOffset = CGSize(width: 0, height: 4)
+        
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
     private let titleLabel: UILabel = {
         let l = UILabel()
         l.text = "CREATE ROOM"
         l.textColor = .white
         l.textAlignment = .center
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 22)
+        l.font = UIFont(name: "WinniePERSONALUSE", size: 30)
         return l
     }()
 
@@ -34,11 +44,12 @@ final class CreateRoomViewController: UIViewController {
         let l = UILabel()
         l.textAlignment = .center
         l.textColor = .orange
-        l.font = .systemFont(ofSize: 24, weight: .bold)
+        l.font = UIFont(name: "WinniePERSONALUSE", size: 24)
         l.backgroundColor = .white
-        l.layer.cornerRadius = 12
+        l.layer.cornerRadius = 10
         l.layer.masksToBounds = true
-        l.heightAnchor.constraint(equalToConstant: 52).isActive = true
+        l.heightAnchor.constraint(equalToConstant: 51).isActive = true
+        l.widthAnchor.constraint(equalToConstant: 40).isActive = true
         return l
     }()
 
@@ -63,16 +74,28 @@ final class CreateRoomViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        card.applyGradient(
+            colors: [
+                UIColor(red: 232/255, green: 110/255, blue: 40/255, alpha: 1),
+                UIColor(red: 242/255, green: 61/255, blue: 44/255, alpha: 1),
+                UIColor(red: 255/255, green: 0/255, blue: 4/255, alpha: 1)
+            ],
+            startPoint: CGPoint(x: 0, y: 0),
+            endPoint: CGPoint(x: 1, y: 1),
+            cornerRadius: 25
+        )
         gradientLayer.frame = view.bounds
     }
 
     private func setupGradient() {
         gradientLayer.colors = [
-            UIColor(red: 1.0, green: 0.5, blue: 0.3, alpha: 1.0).cgColor,
-            UIColor(red: 1.0, green: 0.2, blue: 0.2, alpha: 1.0).cgColor
+            UIColor(red: 0xE8/255, green: 0x6E/255, blue: 0x28/255, alpha: 1.0).cgColor,
+            UIColor(red: 0xF2/255, green: 0x3D/255, blue: 0x2C/255, alpha: 1.0).cgColor,
+            UIColor(red: 0xFF/255, green: 0x00/255, blue: 0x04/255, alpha: 1.0).cgColor
         ]
-        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
-        gradientLayer.endPoint   = CGPoint(x: 0.5, y: 1)
+        gradientLayer.locations = [0.0, 0.5, 1.0]
+        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
+        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
         view.layer.insertSublayer(gradientLayer, at: 0)
     }
 
@@ -101,16 +124,16 @@ final class CreateRoomViewController: UIViewController {
     private func layoutUI() {
         let container = UIStackView(arrangedSubviews: [tipLabel, card, copyHint])
         container.axis = .vertical
-        container.spacing = 30
+        container.spacing = 50
         container.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(container)
 
         let cardStack = UIStackView(arrangedSubviews: [titleLabel, codeLabel, nextButton])
         cardStack.axis = .vertical
-        cardStack.spacing = 18
+        cardStack.spacing = 45
         cardStack.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(cardStack)
-
+        card.heightAnchor.constraint(equalToConstant: 300).isActive = true
         NSLayoutConstraint.activate([
             container.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
             container.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
