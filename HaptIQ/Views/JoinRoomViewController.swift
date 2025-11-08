@@ -1,6 +1,26 @@
 import UIKit
+extension UIView {
+    func applyGradient(
+        colors: [UIColor],
+        startPoint: CGPoint = CGPoint(x: 0.5, y: 0.0),
+        endPoint: CGPoint = CGPoint(x: 0.5, y: 1.0),
+        cornerRadius: CGFloat = 0
+    ) {
+        // Remove existing gradient (avoid stacking multiple)
+        layer.sublayers?.removeAll(where: { $0 is CAGradientLayer })
 
-final class JoinRoomViewController: UIViewController {
+        let gradient = CAGradientLayer()
+        gradient.frame = bounds
+        gradient.colors = colors.map { $0.cgColor }
+        gradient.startPoint = startPoint
+        gradient.endPoint = endPoint
+        gradient.cornerRadius = cornerRadius
+        layer.insertSublayer(gradient, at: 0)
+    }
+}
+
+ class JoinRoomViewController: UIViewController {
+    
     
     private let gradientLayer = CAGradientLayer()
     
@@ -18,7 +38,6 @@ final class JoinRoomViewController: UIViewController {
     
     private let card: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor(red: 0.95, green: 0.4, blue: 0.2, alpha: 1.0)
         view.layer.cornerRadius = 25
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOpacity = 0.25
@@ -48,8 +67,10 @@ final class JoinRoomViewController: UIViewController {
         field.layer.shadowColor = UIColor.black.cgColor
         field.layer.shadowOpacity = 0.2
         field.layer.shadowRadius = 3
-        field.layer.shadowOffset = CGSize(width: 0, height: 2)
+        field.layer.shadowOffset = CGSize(width: 3, height: 2)
         field.heightAnchor.constraint(equalToConstant: 45).isActive = true
+        field.widthAnchor.constraint(equalToConstant: 220).isActive = true
+        
         field.translatesAutoresizingMaskIntoConstraints = false
         return field
     }()
@@ -57,12 +78,16 @@ final class JoinRoomViewController: UIViewController {
     private let joinButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Join", for: .normal)
-        button.backgroundColor = UIColor(red: 0.2, green: 0.8, blue: 0.3, alpha: 1.0)
+        button.backgroundColor = UIColor(red: 21/255, green: 174/255, blue: 21/255, alpha: 1.0)
         button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.font = UIFont(name: "WinniePERSONALUSE", size: 26)
-        button.layer.cornerRadius = 12
-        button.heightAnchor.constraint(equalToConstant: 45).isActive = true
-        button.widthAnchor.constraint(equalToConstant: 150).isActive = true
+        button.titleLabel?.font = UIFont(name: "WinniePERSONALUSE", size: 30)
+        button.layer.cornerRadius = 20
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 3
+        button.layer.shadowOffset = CGSize(width: 3, height: 2)
+        button.heightAnchor.constraint(equalToConstant: 48).isActive = true
+        button.widthAnchor.constraint(equalToConstant: 185).isActive = true
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -72,10 +97,14 @@ final class JoinRoomViewController: UIViewController {
         button.setTitle("Create Room", for: .normal)
         button.backgroundColor = UIColor(red: 0.9, green: 0.4, blue: 0.1, alpha: 1.0)
         button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.font = UIFont(name: "WinniePERSONALUSE", size: 22)
-        button.layer.cornerRadius = 10
-        button.heightAnchor.constraint(equalToConstant: 40).isActive = true
-        button.widthAnchor.constraint(equalToConstant: 180).isActive = true
+        button.titleLabel?.font = UIFont(name: "WinniePERSONALUSE", size: 16)
+        button.layer.cornerRadius = 15
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 3
+        button.layer.shadowOffset = CGSize(width: 3, height: 2)
+        button.heightAnchor.constraint(equalToConstant: 32).isActive = true
+        button.widthAnchor.constraint(equalToConstant: 141).isActive = true
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -137,6 +166,16 @@ final class JoinRoomViewController: UIViewController {
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+            card.applyGradient(
+                colors: [
+                    UIColor(red: 232/255, green: 110/255, blue: 40/255, alpha: 1),
+                    UIColor(red: 242/255, green: 61/255, blue: 44/255, alpha: 1),
+                    UIColor(red: 255/255, green: 0/255, blue: 4/255, alpha: 1)
+                ],
+                startPoint: CGPoint(x: 0, y: 0),
+                endPoint: CGPoint(x: 1, y: 1),
+                cornerRadius: 25
+            )
         gradientLayer.frame = view.bounds
     }
     
@@ -154,50 +193,46 @@ final class JoinRoomViewController: UIViewController {
     }
     
     // MARK: - Layout Setup
-    private func setupUI() {
-        view.addSubview(titleLabel)
-        view.addSubview(card)
-        view.addSubview(nearbyLabel)
-        view.addSubview(emojiRow)
-        view.addSubview(statusLabel)
-        
-        let cardStack = UIStackView(arrangedSubviews: [cardTitle, codeField, joinButton, createButton])
-        cardStack.axis = .vertical
-        cardStack.alignment = .center
-        cardStack.spacing = 15
-        cardStack.translatesAutoresizingMaskIntoConstraints = false
-        card.addSubview(cardStack)
-        
-        NSLayoutConstraint.activate([
-            // Title
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
-            titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
-            // Card
-            card.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 30),
-            card.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
-            card.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
-            card.heightAnchor.constraint(equalToConstant: 500),
-            
-            // CardStack inside card
-            cardStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 20),
-            cardStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -20),
-            cardStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 40),
-            
-            // Nearby Label
-            nearbyLabel.topAnchor.constraint(equalTo: card.bottomAnchor, constant: 25),
-            nearbyLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
-            // Emoji Row
-            emojiRow.topAnchor.constraint(equalTo: nearbyLabel.bottomAnchor, constant: 15),
-            emojiRow.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
-            // Status Label
-            statusLabel.topAnchor.constraint(equalTo: emojiRow.bottomAnchor, constant: 20),
-            statusLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            statusLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
-        ])
-    }
+     // MARK: - Layout
+     private func setupUI() {
+         view.addSubview(titleLabel)
+         view.addSubview(card)
+
+         // Stack inside the card (includes all items)
+         let cardStack = UIStackView(arrangedSubviews: [
+             cardTitle,
+             codeField,
+             joinButton,
+             createButton,
+             nearbyLabel,
+             emojiRow
+         ])
+         cardStack.axis = .vertical
+         cardStack.spacing = 16
+         cardStack.alignment = .center
+         cardStack.translatesAutoresizingMaskIntoConstraints = false
+         card.addSubview(cardStack)
+
+         // ✅ Constraints
+         NSLayoutConstraint.activate([
+             // Title Label
+             titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 80),
+             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+
+             // Card
+             card.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 30),
+             card.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
+             card.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
+             card.heightAnchor.constraint(equalToConstant: 500),
+
+             // Stack inside card
+             cardStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 20),
+             cardStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -20),
+             cardStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 40),
+             cardStack.bottomAnchor.constraint(lessThanOrEqualTo: card.bottomAnchor, constant: -20)
+         ])
+     }
+
     
     private func layoutUI() {}
     
