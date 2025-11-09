@@ -1,6 +1,6 @@
 import UIKit
 
-final class CreateRoomViewController: UIViewController {
+class CreateRoomViewController: UIViewController {
     private let roomCode: String
     private let gradientLayer = CAGradientLayer()
 
@@ -49,17 +49,33 @@ final class CreateRoomViewController: UIViewController {
         l.layer.cornerRadius = 10
         l.layer.masksToBounds = true
         l.heightAnchor.constraint(equalToConstant: 51).isActive = true
-        l.widthAnchor.constraint(equalToConstant: 40).isActive = true
+        l.widthAnchor.constraint(equalToConstant: 218).isActive = true
         return l
     }()
 
-    private let nextButton = UIButton(type: .system)
+    private let nextButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("NEXT", for: .normal)
+        button.backgroundColor = UIColor(red: 21/255, green: 174/255, blue: 21/255, alpha: 1.0)
+        button.setTitleColor(.white, for: .normal)
+        button.titleLabel?.font = UIFont(name: "WinniePERSONALUSE", size: 32)
+        button.layer.cornerRadius = 20
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 3
+        button.layer.shadowOffset = CGSize(width: 3, height: 2)
+        button.heightAnchor.constraint(equalToConstant: 48).isActive = true
+        button.widthAnchor.constraint(equalToConstant: 185).isActive = true
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
     private let copyHint: UILabel = {
         let l = UILabel()
-        l.text = "Tap to copy the code"
-        l.textColor = UIColor.white.withAlphaComponent(0.8)
+        l.text = "Tap to copy the code anuj"
+        l.font = UIFont(name: "WinniePERSONALUSE", size: 24)
+        l.textColor  = .white
         l.textAlignment = .center
-        l.font = .systemFont(ofSize: 12)
         return l
     }()
 
@@ -103,23 +119,21 @@ final class CreateRoomViewController: UIViewController {
         view.backgroundColor = .black
         card.backgroundColor = UIColor.white.withAlphaComponent(0.15)
         card.layer.cornerRadius = 24
-
-        styleButton(nextButton, title: "NEXT", background: .systemGreen)
         nextButton.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
 
         let tap = UITapGestureRecognizer(target: self, action: #selector(copyCode))
         codeLabel.isUserInteractionEnabled = true
         codeLabel.addGestureRecognizer(tap)
     }
-
-    private func styleButton(_ b: UIButton, title: String, background: UIColor) {
-        b.setTitle(title, for: .normal)
-        b.setTitleColor(.white, for: .normal)
-        b.backgroundColor = background
-        b.layer.cornerRadius = 14
-        b.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
-        b.heightAnchor.constraint(equalToConstant: 52).isActive = true
-    }
+                            // useless code dont have any use
+//    private func styleButton(_ b: UIButton, title: String, background: UIColor) {
+//        b.setTitle(title, for: .normal)
+//        b.setTitleColor(.white, for: .normal)
+//        b.backgroundColor = background
+//        b.layer.cornerRadius = 14
+//        b.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
+//        b.heightAnchor.constraint(equalToConstant: 52).isActive = true
+//    }
 
     private func layoutUI() {
         let container = UIStackView(arrangedSubviews: [tipLabel, card, copyHint])
@@ -131,20 +145,24 @@ final class CreateRoomViewController: UIViewController {
         let cardStack = UIStackView(arrangedSubviews: [titleLabel, codeLabel, nextButton])
         cardStack.axis = .vertical
         cardStack.spacing = 45
+        cardStack.alignment = .center
         cardStack.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(cardStack)
-        card.heightAnchor.constraint(equalToConstant: 300).isActive = true
+
         NSLayoutConstraint.activate([
+            // Container
             container.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
             container.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
-            container.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 100), // ↓ shifted
+            container.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 100),
 
-            cardStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
-            cardStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
-            cardStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
-            cardStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -16),
+            // Card stack inside card
+            cardStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 20),
+            cardStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -20),
+            cardStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 20),
+            cardStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -20)
         ])
     }
+
 
     @objc private func copyCode() {
         UIPasteboard.general.string = roomCode
