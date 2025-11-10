@@ -120,7 +120,7 @@ extension UIView {
     }()
     
     private let emojiRow: UIStackView = {
-        let emojis = ["😆", "🙂", "😁", "😏"].map { emoji -> UILabel in
+        let emojis = ["😆", "🙂", "😁"].map { emoji -> UILabel in
             let lbl = UILabel()
             lbl.text = emoji
             lbl.font = UIFont.systemFont(ofSize: 38)
