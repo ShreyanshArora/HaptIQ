@@ -1,7 +1,7 @@
 import Foundation
 import FirebaseFirestore
 
-class RoomManager {
+class RoomManager {  // this is room manager
     static let shared = RoomManager()
 
     private init() {}
