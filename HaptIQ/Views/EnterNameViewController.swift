@@ -72,7 +72,7 @@ import UIKit
         setupGradient()
         setupUI()
         layoutUI()
-        addFigmaBackButton()
+        //addFigmaBackButton()
     }
 
     override func viewDidLayoutSubviews() {
