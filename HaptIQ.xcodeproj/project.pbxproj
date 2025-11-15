@@ -37,6 +37,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		752E06DF2EC8BE0C0033553E /* Exceptions for "HaptIQUITests" folder in "HaptIQUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"GoogleService-Info.plist",
+			);
+			target = E115687D2EB1591E00E0B24B /* HaptIQUITests */;
+		};
 		E11568862EB1591E00E0B24B /* Exceptions for "HaptIQ" folder in "HaptIQ" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -50,13 +57,6 @@
 				"GoogleService-Info.plist",
 			);
 			target = E115685D2EB1591C00E0B24B /* HaptIQ */;
-		};
-		E115690A2EB5227A00E0B24B /* Exceptions for "HaptIQUITests" folder in "HaptIQTests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				"GoogleService-Info.plist",
-			);
-			target = E11568732EB1591E00E0B24B /* HaptIQTests */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -78,7 +78,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				E11569092EB5227A00E0B24B /* Exceptions for "HaptIQUITests" folder in "HaptIQ" target */,
-				E115690A2EB5227A00E0B24B /* Exceptions for "HaptIQUITests" folder in "HaptIQTests" target */,
+				752E06DF2EC8BE0C0033553E /* Exceptions for "HaptIQUITests" folder in "HaptIQUITests" target */,
 			);
 			path = HaptIQUITests;
 			sourceTree = "<group>";
