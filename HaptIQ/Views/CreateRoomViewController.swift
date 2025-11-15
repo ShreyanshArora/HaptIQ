@@ -3,6 +3,19 @@ import UIKit
 class CreateRoomViewController: UIViewController {
     private let roomCode: String
     private let gradientLayer = CAGradientLayer()
+    private func setupRightIconButton() {
+        let icon = UIImage(systemName: "questionmark.circle.fill")
+
+        let button = UIBarButtonItem(
+            image: icon,
+            style: .plain,
+            target: self,
+            action: #selector(openNextPage)
+        )
+
+        button.tintColor = .white  // icon color
+        navigationItem.rightBarButtonItem = button
+    }
 
     init(roomCode: String) {
         self.roomCode = roomCode
@@ -10,6 +23,7 @@ class CreateRoomViewController: UIViewController {
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
+    
     private let tipLabel: UILabel = {
         let l = UILabel()
         l.text = "Share this code with your friends"
@@ -84,7 +98,8 @@ class CreateRoomViewController: UIViewController {
         setupGradient()
         setupUI()
         layoutUI()
-        addFigmaBackButton()
+        setupRightIconButton()
+       // addFigmaBackButton()
         codeLabel.text = roomCode
     }
 
@@ -170,6 +185,10 @@ class CreateRoomViewController: UIViewController {
 
     @objc private func nextTapped() {
         let vc = EnterNameViewController(roomCode: roomCode)
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    @objc private func openNextPage() {
+        let vc = Instructions() // your destination
         navigationController?.pushViewController(vc, animated: true)
     }
 }

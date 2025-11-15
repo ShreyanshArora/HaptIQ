@@ -25,9 +25,28 @@ extension UIView {
     private let gradientLayer = CAGradientLayer()
     
     // MARK: - UI Components
+     
+     private func setupRightIconButton() {
+         let icon = UIImage(systemName: "questionmark.circle.fill")
+
+         let button = UIBarButtonItem(
+             image: icon,
+             style: .plain,
+             target: self,
+             action: #selector(openNextPage)
+         )
+
+         button.tintColor = .white  // icon color
+         navigationItem.rightBarButtonItem = button
+     }
+
+     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Enter room code to Join the room"
+        label.text = """
+Enter room code to Join the 
+room
+"""
         label.textColor = .white
         label.font = UIFont(name: "WinniePERSONALUSE", size: 28)
         label.textAlignment = .center
@@ -61,6 +80,7 @@ extension UIView {
         let field = UITextField()
         field.placeholder = "Enter Room ID"
         field.backgroundColor = .white
+        field.textColor = .black
         field.layer.cornerRadius = 10
         field.textAlignment = .center
         field.font = UIFont(name: "WinniePERSONALUSE", size: 18)
@@ -69,7 +89,7 @@ extension UIView {
         field.layer.shadowRadius = 3
         field.layer.shadowOffset = CGSize(width: 3, height: 2)
         field.heightAnchor.constraint(equalToConstant: 45).isActive = true
-        field.widthAnchor.constraint(equalToConstant: 220).isActive = true
+        field.widthAnchor.constraint(equalToConstant: 210 ).isActive = true
         
         field.translatesAutoresizingMaskIntoConstraints = false
         return field
@@ -162,8 +182,14 @@ extension UIView {
         setupUI()
         layoutUI()
         setupActions()
+       setupRightIconButton()
     }
     
+     override func viewWillAppear(_ animated: Bool) {
+         super.viewWillAppear(animated)
+         navigationItem.title = ""   
+         navigationController?.setNavigationBarHidden(false, animated: false)
+     }
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
             card.applyGradient(
@@ -274,5 +300,12 @@ extension UIView {
             }
         }
     }
+     
+
+     @objc private func openNextPage() {
+         let vc = Instructions() // your destination
+         navigationController?.pushViewController(vc, animated: true)
+     }
+
 }
 

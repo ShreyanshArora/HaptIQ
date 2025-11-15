@@ -22,9 +22,9 @@ class RoomManager {
         
         db.collection("rooms").document(code).setData(data) { error in
             if let error = error {
-                completion(.failure(.message("❌ Failed to create room: \(error.localizedDescription)")))
+                completion(.failure(.message("Failed to create room: \(error.localizedDescription)")))
             } else {
-                print("✅ Room created with code: \(code)")
+                print("Room created with code: \(code)")
                 completion(.success(code))
             }
         }
@@ -34,28 +34,28 @@ class RoomManager {
         let roomRef = db.collection("rooms").document(code)
         roomRef.getDocument { document, error in
             if let error = error {
-                completion(.failure(.message("❌ Error checking room: \(error.localizedDescription)")))
+                completion(.failure(.message(" Error checking room: \(error.localizedDescription)")))
                 return
             }
             
             guard let document = document, document.exists else {
-                completion(.failure(.message("❌ Room not found!")))
+                completion(.failure(.message("Room not found!")))
                 return
             }
             
             guard let expiresAt = document.data()?["expiresAt"] as? Timestamp else {
-                completion(.failure(.message("⚠️ Invalid room data.")))
+                completion(.failure(.message("Invalid room data.")))
                 return
             }
             
             if expiresAt.dateValue() < Date() {
                 roomRef.delete { _ in
-                    completion(.failure(.message("⏰ Room expired!")))
+                    completion(.failure(.message("Room expired!")))
                 }
                 return
             }
             
-            print("✅ Joined room: \(code)")
+            print("Joined room: \(code)")
             completion(.success(()))
         }
     }

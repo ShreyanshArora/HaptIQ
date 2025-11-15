@@ -12,7 +12,7 @@ final class RoomLobbyViewController: UIViewController {
 
     private let headerLabel: UILabel = {
         let l = UILabel()
-        l.text = "🎯 Room Lobby"
+        l.text = " Room Lobby"
         l.textColor = .white
         l.font = .systemFont(ofSize: 32, weight: .bold)
         l.textAlignment = .center
@@ -56,7 +56,7 @@ final class RoomLobbyViewController: UIViewController {
         setupGradient()
         setupUI()
         layoutUI()
-        addFigmaBackButton()
+        //addFigmaBackButton()
         codeValue.text = roomCode
     }
 
