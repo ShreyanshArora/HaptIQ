@@ -1,34 +1,39 @@
 import UIKit
+import FirebaseFirestore
 
- class EnterNameViewController: UIViewController {
+class EnterNameViewController: UIViewController {
+
     private let roomCode: String
+    private let isCreator: Bool
     private let gradientLayer = CAGradientLayer()
 
-    init(roomCode: String) {
+    init(roomCode: String, isCreator: Bool) {
         self.roomCode = roomCode
+        self.isCreator = isCreator
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
+    // MARK: - UI Components
     private let titleLabel: UILabel = {
         let l = UILabel()
         l.text = "Enter Your Name"
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 30)
+        l.font = UIFont(name: "WinniePERSONALUSE", size: 32)
         l.textColor = .white
         l.textAlignment = .center
+        l.translatesAutoresizingMaskIntoConstraints = false
         return l
     }()
 
     private let card: UIView = {
-        let view = UIView()
-        view.layer.cornerRadius = 25
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOpacity = 0.25
-        view.layer.shadowRadius = 8
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
+        let v = UIView()
+        v.layer.cornerRadius = 25
+        v.layer.shadowColor = UIColor.black.cgColor
+        v.layer.shadowOpacity = 0.25
+        v.layer.shadowRadius = 8
+        v.layer.shadowOffset = CGSize(width: 0, height: 4)
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
     }()
 
     private let nameField: UITextField = {
@@ -38,45 +43,54 @@ import UIKit
         tf.backgroundColor = .white
         tf.layer.cornerRadius = 12
         tf.textAlignment = .center
-        tf.textColor = .black 
+        tf.textColor = .black
         tf.heightAnchor.constraint(equalToConstant: 48).isActive = true
+        tf.widthAnchor.constraint(equalToConstant: 220).isActive = true
+        tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
     }()
+
     private let moveButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("MOVE TO LOBBY", for: .normal)
-        button.backgroundColor = UIColor(red: 21/255, green: 174/255, blue: 21/255, alpha: 1.0)
-        button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.font = UIFont(name: "WinniePERSONALUSE", size: 22)
-        button.layer.cornerRadius = 20
-        button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOpacity = 0.2
-        button.layer.shadowRadius = 3
-        button.layer.shadowOffset = CGSize(width: 3, height: 2)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
+        let b = UIButton(type: .system)
+        b.setTitle("MOVE TO LOBBY", for: .normal)
+        b.backgroundColor = UIColor(red: 21/255, green: 174/255, blue: 21/255, alpha: 1.0)
+        b.setTitleColor(.white, for: .normal)
+        b.titleLabel?.font = UIFont(name: "WinniePERSONALUSE", size: 22)
+        b.layer.cornerRadius = 18
+        b.layer.shadowColor = UIColor.black.cgColor
+        b.layer.shadowOpacity = 0.25
+        b.layer.shadowRadius = 4
+        b.layer.shadowOffset = CGSize(width: 2, height: 2)
+        b.heightAnchor.constraint(equalToConstant: 48).isActive = true
+        b.widthAnchor.constraint(equalToConstant: 190).isActive = true
+        b.translatesAutoresizingMaskIntoConstraints = false
+        return b
     }()
+
     private let hintLabel: UILabel = {
         let l = UILabel()
         l.text = "This name will be visible to your friends"
-        l.textColor = UIColor.white.withAlphaComponent(0.8)
-        l.textAlignment = .center
-        l.textColor = .white
+        l.textColor = UIColor.white.withAlphaComponent(0.9)
         l.font = UIFont(name: "WinniePERSONALUSE", size: 20)
+        l.textAlignment = .center
         l.numberOfLines = 0
+        l.translatesAutoresizingMaskIntoConstraints = false
         return l
     }()
 
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupGradient()
         setupUI()
         layoutUI()
-        //addFigmaBackButton()
+        addFigmaBackButton()
+        setupActions()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        gradientLayer.frame = view.bounds
         card.applyGradient(
             colors: [
                 UIColor(red: 232/255, green: 110/255, blue: 40/255, alpha: 1),
@@ -87,9 +101,9 @@ import UIKit
             endPoint: CGPoint(x: 1, y: 1),
             cornerRadius: 25
         )
-        gradientLayer.frame = view.bounds
     }
 
+    // MARK: - Setup
     private func setupGradient() {
         gradientLayer.colors = [
             UIColor(red: 0xE8/255, green: 0x6E/255, blue: 0x28/255, alpha: 1.0).cgColor,
@@ -104,57 +118,85 @@ import UIKit
 
     private func setupUI() {
         view.backgroundColor = .black
-        card.backgroundColor = UIColor.white.withAlphaComponent(0.15)
-        card.layer.cornerRadius = 24
-        moveButton.addTarget(self, action: #selector(moveTapped), for: .touchUpInside)
+        view.addSubview(titleLabel)
+        view.addSubview(card)
+        view.addSubview(hintLabel)
     }
-    
-                        // useless code dont have any use
-//    private func styleButton(_ b: UIButton, title: String, background: UIColor) {
-//        b.setTitle(title, for: .normal)
-//        b.setTitleColor(.white, for: .normal)
-//        b.backgroundColor = background
-//        b.layer.cornerRadius = 14
-//        b.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
-//        b.heightAnchor.constraint(equalToConstant: 52).isActive = true
-//    }
 
     private func layoutUI() {
-        let container = UIStackView(arrangedSubviews: [card, hintLabel])
+        let stack = UIStackView(arrangedSubviews: [nameField, moveButton])
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.spacing = 25
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(stack)
+
+        let container = UIStackView(arrangedSubviews: [titleLabel, card, hintLabel])
         container.axis = .vertical
-        container.spacing = 30
+        container.alignment = .center
+        container.spacing = 40
         container.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(container)
 
-        let cardStack = UIStackView(arrangedSubviews: [titleLabel, nameField, moveButton])
-        cardStack.axis = .vertical
-        cardStack.spacing = 35
-        cardStack.alignment = .center
-        cardStack.translatesAutoresizingMaskIntoConstraints = false
-       // card.heightAnchor.constraint(equalToConstant: 350).isActive = true
-        card.addSubview(cardStack)
-
-        nameField.widthAnchor.constraint(equalToConstant: 220).isActive = true
-        moveButton.widthAnchor.constraint(equalToConstant: 175).isActive = true
-        moveButton.heightAnchor.constraint(equalToConstant: 48).isActive = true
-
         NSLayoutConstraint.activate([
-            container.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
-            container.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
-            container.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             container.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             container.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
             container.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
-            cardStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
-            cardStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
-            cardStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
-            cardStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -16),
+
+            card.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            card.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            card.heightAnchor.constraint(equalToConstant: 240),
+
+            stack.centerXAnchor.constraint(equalTo: card.centerXAnchor),
+            stack.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+
+            titleLabel.topAnchor.constraint(greaterThanOrEqualTo: view.safeAreaLayoutGuide.topAnchor, constant: 60),
         ])
     }
 
+    private func setupActions() {
+        moveButton.addTarget(self, action: #selector(moveTapped), for: .touchUpInside)
+    }
 
+    // MARK: - Actions
     @objc private func moveTapped() {
-        let vc = RoomLobbyViewController(roomCode: roomCode)
-        navigationController?.pushViewController(vc, animated: true)
+        guard let name = nameField.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !name.isEmpty else {
+            let alert = UIAlertController(title: "Missing Name", message: "Please enter your name.", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
+        }
+
+        if isCreator {
+            let hostID = RoomManager.shared.currentUserID
+
+            Firestore.firestore()
+                .collection("rooms")
+                .document(roomCode)
+                .collection("players")
+                .document(hostID)
+                .updateData(["name": name]) { _ in
+                    let vc = RoomLobbyViewController(roomCode: self.roomCode)
+                    self.navigationController?.pushViewController(vc, animated: true)
+                }
+
+            return
+        }
+
+        let newID = UUID().uuidString
+        RoomManager.shared.addPlayer(
+            id: newID,
+            name: name,
+            isHost: false,
+            to: roomCode
+        ) { _ in
+            RoomManager.shared.currentUserID = newID
+
+            DispatchQueue.main.async {
+                let vc = RoomLobbyViewController(roomCode: self.roomCode)
+                self.navigationController?.pushViewController(vc, animated: true)
+            }
+        }
     }
 }
