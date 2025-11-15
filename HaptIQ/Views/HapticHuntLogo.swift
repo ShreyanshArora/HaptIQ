@@ -21,7 +21,7 @@ class HapticHuntLogo: UIViewController {
     }
     private func redirectToNextScreen() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            let vc = JoinRoomViewController()   // next screen
+            let vc = OnboardingController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)   // next screen
             vc.modalPresentationStyle = .fullScreen
             self.navigationController?.pushViewController(vc, animated: true)
         }
