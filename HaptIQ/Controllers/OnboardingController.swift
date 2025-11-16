@@ -79,7 +79,7 @@ class OnboardingController: UIPageViewController,
         // If last page → go to JoinRoomViewController
         if index == controllers.count - 1 {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                let vc = JoinRoomViewController()
+                let vc = AvatarSelectionController()
                 self.navigationController?.setViewControllers([vc], animated: true)
             }
             return nil
