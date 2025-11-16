@@ -1,311 +1,210 @@
 import UIKit
-extension UIView {
-    func applyGradient(
-        colors: [UIColor],
-        startPoint: CGPoint = CGPoint(x: 0.5, y: 0.0),
-        endPoint: CGPoint = CGPoint(x: 0.5, y: 1.0),
-        cornerRadius: CGFloat = 0
-    ) {
-        // Remove existing gradient (avoid stacking multiple)
-        layer.sublayers?.removeAll(where: { $0 is CAGradientLayer })
 
-        let gradient = CAGradientLayer()
-        gradient.frame = bounds
-        gradient.colors = colors.map { $0.cgColor }
-        gradient.startPoint = startPoint
-        gradient.endPoint = endPoint
-        gradient.cornerRadius = cornerRadius
-        layer.insertSublayer(gradient, at: 0)
-    }
-}
+class JoinRoomViewController: UIViewController {
 
- class JoinRoomViewController: UIViewController {
-    
-    
-    private let gradientLayer = CAGradientLayer()
-    
-    // MARK: - UI Components
-     
-     private func setupRightIconButton() {
-         let icon = UIImage(systemName: "questionmark.circle.fill")
+    // MARK: - Background + Characters
 
-         let button = UIBarButtonItem(
-             image: icon,
-             style: .plain,
-             target: self,
-             action: #selector(openNextPage)
-         )
+    private let backgroundImage: UIImageView = {
+        let iv = UIImageView(image: UIImage(named: "bgHex"))
+        iv.contentMode = .scaleAspectFill
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
+    }()
 
-         button.tintColor = .white  // icon color
-         navigationItem.rightBarButtonItem = button
-     }
+    private let leftCharacter: UIImageView = {
+        let iv = UIImageView(image: UIImage(named: "leftChar"))
+        iv.contentMode = .scaleAspectFit
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
+    }()
 
-     
+    private let rightCharacter: UIImageView = {
+        let iv = UIImageView(image: UIImage(named: "rightChar"))
+        iv.contentMode = .scaleAspectFit
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
+    }()
+
+    private let titleBanner: UIImageView = {
+        let iv = UIImageView(image: UIImage(named: "titleBanner"))
+        iv.contentMode = .scaleAspectFit
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
+    }()
+
     private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = """
-Enter room code to Join the 
-room
-"""
-        label.textColor = .white
-        label.font = UIFont(name: "WinniePERSONALUSE", size: 28)
-        label.textAlignment = .center
-        label.numberOfLines = 2
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
+        let l = UILabel()
+        l.text = "Haptic Hunt"
+        l.font = UIFont(name: "WinniePERSONALUSE", size: 42)
+        l.textColor = .white
+        l.textAlignment = .center
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
     }()
-    
-    private let card: UIView = {
-        let view = UIView()
-        view.layer.cornerRadius = 25
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOpacity = 0.25
-        view.layer.shadowRadius = 8
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-    
-    private let cardTitle: UILabel = {
-        let label = UILabel()
-        label.text = "Join ROOM"
-        label.textColor = .white
-        label.font = UIFont(name: "WinniePERSONALUSE", size: 34)
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
+
+    // MARK: - Input + Buttons
+
     private let codeField: UITextField = {
-        let field = UITextField()
-        field.placeholder = "Enter Room ID"
-        field.backgroundColor = .white
-        field.textColor = .black
-        field.layer.cornerRadius = 10
-        field.textAlignment = .center
-        field.font = UIFont(name: "WinniePERSONALUSE", size: 18)
-        field.layer.shadowColor = UIColor.black.cgColor
-        field.layer.shadowOpacity = 0.2
-        field.layer.shadowRadius = 3
-        field.layer.shadowOffset = CGSize(width: 3, height: 2)
-        field.heightAnchor.constraint(equalToConstant: 45).isActive = true
-        field.widthAnchor.constraint(equalToConstant: 210 ).isActive = true
-        
-        field.translatesAutoresizingMaskIntoConstraints = false
-        return field
+        let tf = UITextField()
+        tf.placeholder = "Enter Room Code"
+        tf.font = UIFont(name: "WinniePERSONALUSE", size: 24)
+        tf.textAlignment = .center
+        tf.backgroundColor = .white
+        tf.layer.cornerRadius = 16
+        tf.translatesAutoresizingMaskIntoConstraints = false
+        tf.heightAnchor.constraint(equalToConstant: 55).isActive = true
+        return tf
     }()
-    
+
     private let joinButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Join", for: .normal)
-        button.backgroundColor = UIColor(red: 21/255, green: 174/255, blue: 21/255, alpha: 1.0)
-        button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.font = UIFont(name: "WinniePERSONALUSE", size: 30)
-        button.layer.cornerRadius = 20
-        button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOpacity = 0.2
-        button.layer.shadowRadius = 3
-        button.layer.shadowOffset = CGSize(width: 3, height: 2)
-        button.heightAnchor.constraint(equalToConstant: 48).isActive = true
-        button.widthAnchor.constraint(equalToConstant: 185).isActive = true
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
+        let b = UIButton(type: .system)
+        b.setTitle("Join Room", for: .normal)
+        b.setTitleColor(.white, for: .normal)
+        b.titleLabel?.font = UIFont(name: "WinniePERSONALUSE", size: 28)
+        b.layer.cornerRadius = 20
+        b.layer.borderColor = UIColor.white.cgColor
+        b.layer.borderWidth = 4
+        b.backgroundColor = UIColor(red: 62/255, green: 136/255, blue: 245/255, alpha: 1)
+        b.translatesAutoresizingMaskIntoConstraints = false
+        return b
     }()
-    
+
     private let createButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Create Room", for: .normal)
-        button.backgroundColor = UIColor(red: 0.9, green: 0.4, blue: 0.1, alpha: 1.0)
-        button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.font = UIFont(name: "WinniePERSONALUSE", size: 16)
-        button.layer.cornerRadius = 15
-        button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOpacity = 0.2
-        button.layer.shadowRadius = 3
-        button.layer.shadowOffset = CGSize(width: 3, height: 2)
-        button.heightAnchor.constraint(equalToConstant: 32).isActive = true
-        button.widthAnchor.constraint(equalToConstant: 141).isActive = true
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
+        let b = UIButton(type: .system)
+        b.setTitle("Create Room", for: .normal)
+        b.setTitleColor(.white, for: .normal)
+        b.titleLabel?.font = UIFont(name: "WinniePERSONALUSE", size: 28)
+        b.layer.cornerRadius = 20
+        b.layer.borderColor = UIColor.white.cgColor
+        b.layer.borderWidth = 4
+        b.backgroundColor = UIColor(red: 252/255, green: 137/255, blue: 66/255, alpha: 1)
+        b.translatesAutoresizingMaskIntoConstraints = false
+        return b
     }()
-    
-    private let nearbyLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Nearby Players"
-        label.font = UIFont(name: "WinniePERSONALUSE", size: 22)
-        label.textColor = .white
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    private let emojiRow: UIStackView = {
-        let emojis = ["😆", "🙂", "😁"].map { emoji -> UILabel in
-            let lbl = UILabel()
-            lbl.text = emoji
-            lbl.font = UIFont.systemFont(ofSize: 38)
-            lbl.textAlignment = .center
-            lbl.backgroundColor = .white
-            lbl.layer.cornerRadius = 35
-            lbl.layer.masksToBounds = true
-            lbl.layer.shadowColor = UIColor.black.cgColor
-            lbl.layer.shadowOpacity = 0.25
-            lbl.layer.shadowRadius = 4
-            lbl.layer.shadowOffset = CGSize(width: 0, height: 2)
-            lbl.widthAnchor.constraint(equalToConstant: 70).isActive = true
-            lbl.heightAnchor.constraint(equalToConstant: 70).isActive = true
-            return lbl
-        }
-        let stack = UIStackView(arrangedSubviews: emojis)
-        stack.axis = .horizontal
-        stack.alignment = .center
-        stack.distribution = .equalSpacing
-        stack.spacing = 20
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        return stack
-    }()
-    
-    private let statusLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = .white
-        label.font = .systemFont(ofSize: 13, weight: .medium)
-        label.textAlignment = .center
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
+
+    // Help icon
+    private func setupHelpButton() {
+        let icon = UIBarButtonItem(
+            image: UIImage(systemName: "questionmark.circle.fill"),
+            style: .plain,
+            target: self,
+            action: #selector(openHelp)
+        )
+        icon.tintColor = .white
+        navigationItem.rightBarButtonItem = icon
+    }
+
     // MARK: - Lifecycle
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupGradientBackground()
-        setupUI()
-        layoutUI()
+
+        navigationController?.setNavigationBarHidden(false, animated: false)
+        navigationItem.title = ""
+
+        setupHelpButton()
+        setupLayout()
         setupActions()
-       setupRightIconButton()
     }
-    
-     override func viewWillAppear(_ animated: Bool) {
-         super.viewWillAppear(animated)
-         navigationItem.title = ""   
-         navigationController?.setNavigationBarHidden(false, animated: false)
-     }
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-            card.applyGradient(
-                colors: [
-                    UIColor(red: 232/255, green: 110/255, blue: 40/255, alpha: 1),
-                    UIColor(red: 242/255, green: 61/255, blue: 44/255, alpha: 1),
-                    UIColor(red: 255/255, green: 0/255, blue: 4/255, alpha: 1)
-                ],
-                startPoint: CGPoint(x: 0, y: 0),
-                endPoint: CGPoint(x: 1, y: 1),
-                cornerRadius: 25
-            )
-        gradientLayer.frame = view.bounds
+
+    // MARK: - Layout
+
+    private func setupLayout() {
+
+        view.addSubview(backgroundImage)
+        view.addSubview(leftCharacter)
+        view.addSubview(rightCharacter)
+        view.addSubview(titleBanner)
+        view.addSubview(titleLabel)
+        view.addSubview(codeField)
+        view.addSubview(joinButton)
+        view.addSubview(createButton)
+
+        NSLayoutConstraint.activate([
+
+            // Background
+            backgroundImage.topAnchor.constraint(equalTo: view.topAnchor),
+            backgroundImage.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            backgroundImage.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            backgroundImage.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            // Characters
+            leftCharacter.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 5),
+            leftCharacter.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -40),
+            leftCharacter.widthAnchor.constraint(equalToConstant: 140),
+            leftCharacter.heightAnchor.constraint(equalToConstant: 240),
+
+            rightCharacter.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -5),
+            rightCharacter.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -40),
+            rightCharacter.widthAnchor.constraint(equalToConstant: 140),
+            rightCharacter.heightAnchor.constraint(equalToConstant: 240),
+
+            // Title banner
+            titleBanner.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
+            titleBanner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            titleBanner.widthAnchor.constraint(equalToConstant: 280),
+            titleBanner.heightAnchor.constraint(equalToConstant: 100),
+
+            // Title text
+            titleLabel.centerXAnchor.constraint(equalTo: titleBanner.centerXAnchor),
+            titleLabel.centerYAnchor.constraint(equalTo: titleBanner.centerYAnchor),
+
+            // Room code input
+            codeField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            codeField.topAnchor.constraint(equalTo: titleBanner.bottomAnchor, constant: 40),
+            codeField.widthAnchor.constraint(equalToConstant: 240),
+
+            // Join button
+            joinButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            joinButton.topAnchor.constraint(equalTo: codeField.bottomAnchor, constant: 25),
+            joinButton.widthAnchor.constraint(equalToConstant: 240),
+            joinButton.heightAnchor.constraint(equalToConstant: 65),
+
+            // Create button
+            createButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            createButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            createButton.widthAnchor.constraint(equalToConstant: 240),
+            createButton.heightAnchor.constraint(equalToConstant: 65)
+        ])
     }
-    
-    // MARK: - Gradient
-    private func setupGradientBackground() {
-        gradientLayer.colors = [
-            UIColor(red: 0xE8/255, green: 0x6E/255, blue: 0x28/255, alpha: 1.0).cgColor,
-            UIColor(red: 0xF2/255, green: 0x3D/255, blue: 0x2C/255, alpha: 1.0).cgColor,
-            UIColor(red: 0xFF/255, green: 0x00/255, blue: 0x04/255, alpha: 1.0).cgColor
-        ]
-        gradientLayer.locations = [0.0, 0.5, 1.0]
-        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
-        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
-        view.layer.insertSublayer(gradientLayer, at: 0)
-    }
-    
-    // MARK: - Layout Setup
-     // MARK: - Layout
-     private func setupUI() {
-         view.addSubview(titleLabel)
-         view.addSubview(card)
 
-         // Stack inside the card (includes all items)
-         let cardStack = UIStackView(arrangedSubviews: [
-             cardTitle,
-             codeField,
-             joinButton,
-             createButton,
-             nearbyLabel,
-             emojiRow
-         ])
-         cardStack.axis = .vertical
-         cardStack.spacing = 16
-         cardStack.alignment = .center
-         cardStack.translatesAutoresizingMaskIntoConstraints = false
-         card.addSubview(cardStack)
+    // MARK: - Actions
 
-         // ✅ Constraints
-         NSLayoutConstraint.activate([
-             // Title Label
-             titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 80),
-             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-
-             // Card
-             card.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 30),
-             card.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
-             card.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
-             card.heightAnchor.constraint(equalToConstant: 500),
-
-             // Stack inside card
-             cardStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 20),
-             cardStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -20),
-             cardStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 40),
-             cardStack.bottomAnchor.constraint(lessThanOrEqualTo: card.bottomAnchor, constant: -20)
-         ])
-     }
-
-    
-    private func layoutUI() {}
-    
     private func setupActions() {
         joinButton.addTarget(self, action: #selector(joinTapped), for: .touchUpInside)
         createButton.addTarget(self, action: #selector(createTapped), for: .touchUpInside)
     }
-    
-    // MARK: - Actions
+
+    @objc private func joinTapped() {
+        guard let code = codeField.text?.trimmingCharacters(in: .whitespaces), !code.isEmpty else { return }
+
+        RoomManager.shared.joinRoom(withCode: code) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success:
+                    let vc = EnterNameViewController(roomCode: code, isCreator: false)
+                    self?.navigationController?.pushViewController(vc, animated: true)
+                case .failure(let error):
+                    print("Join Err:", error)
+                }
+            }
+        }
+    }
+
     @objc private func createTapped() {
         RoomManager.shared.createRoom { [weak self] result in
             DispatchQueue.main.async {
                 switch result {
                 case .success(let code):
-                    let vc = CreateRoomViewController(roomCode: code)
-                    self?.navigationController?.pushViewController(vc, animated: true)
-                case .failure(let err):
-                    self?.statusLabel.text = err.localizedDescription
+                    self?.navigationController?.pushViewController(CreateRoomViewController(roomCode: code), animated: true)
+                case .failure(let error):
+                    print("Create Err:", error)
                 }
             }
         }
     }
 
-    @objc private func joinTapped() {
-        let code = codeField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        guard !code.isEmpty else {
-            statusLabel.text = "⚠️ Please enter a room code first."
-            return
-        }
-        RoomManager.shared.joinRoom(withCode: code) { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success:
-                    let vc = RoomLobbyViewController(roomCode: code)
-                    self?.navigationController?.pushViewController(vc, animated: true)
-                case .failure(let err):
-                    self?.statusLabel.text = err.localizedDescription
-                }
-            }
-        }
+    @objc private func openHelp() {
+        navigationController?.pushViewController(Instructions(), animated: true)
     }
-     
-
-     @objc private func openNextPage() {
-         let vc = Instructions() // your destination
-         navigationController?.pushViewController(vc, animated: true)
-     }
-
 }
-

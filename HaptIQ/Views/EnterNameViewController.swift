@@ -2,18 +2,18 @@ import UIKit
 import FirebaseFirestore
 
 class EnterNameViewController: UIViewController {
-
+    
     private let roomCode: String
     private let isCreator: Bool
     private let gradientLayer = CAGradientLayer()
-
+    
     init(roomCode: String, isCreator: Bool) {
         self.roomCode = roomCode
         self.isCreator = isCreator
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
-
+    
     // MARK: - UI Components
     private let titleLabel: UILabel = {
         let l = UILabel()
@@ -24,7 +24,7 @@ class EnterNameViewController: UIViewController {
         l.translatesAutoresizingMaskIntoConstraints = false
         return l
     }()
-
+    
     private let card: UIView = {
         let v = UIView()
         v.layer.cornerRadius = 25
@@ -35,7 +35,7 @@ class EnterNameViewController: UIViewController {
         v.translatesAutoresizingMaskIntoConstraints = false
         return v
     }()
-
+    
     private let nameField: UITextField = {
         let tf = UITextField()
         tf.placeholder = "Your name"
@@ -49,7 +49,7 @@ class EnterNameViewController: UIViewController {
         tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
     }()
-
+    
     private let moveButton: UIButton = {
         let b = UIButton(type: .system)
         b.setTitle("MOVE TO LOBBY", for: .normal)
@@ -66,7 +66,7 @@ class EnterNameViewController: UIViewController {
         b.translatesAutoresizingMaskIntoConstraints = false
         return b
     }()
-
+    
     private let hintLabel: UILabel = {
         let l = UILabel()
         l.text = "This name will be visible to your friends"
@@ -77,7 +77,7 @@ class EnterNameViewController: UIViewController {
         l.translatesAutoresizingMaskIntoConstraints = false
         return l
     }()
-
+    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -87,7 +87,7 @@ class EnterNameViewController: UIViewController {
         addFigmaBackButton()
         setupActions()
     }
-
+    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         gradientLayer.frame = view.bounds
@@ -102,7 +102,7 @@ class EnterNameViewController: UIViewController {
             cornerRadius: 25
         )
     }
-
+    
     // MARK: - Setup
     private func setupGradient() {
         gradientLayer.colors = [
@@ -115,14 +115,14 @@ class EnterNameViewController: UIViewController {
         gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
         view.layer.insertSublayer(gradientLayer, at: 0)
     }
-
+    
     private func setupUI() {
         view.backgroundColor = .black
         view.addSubview(titleLabel)
         view.addSubview(card)
         view.addSubview(hintLabel)
     }
-
+    
     private func layoutUI() {
         let stack = UIStackView(arrangedSubviews: [nameField, moveButton])
         stack.axis = .vertical
@@ -130,43 +130,37 @@ class EnterNameViewController: UIViewController {
         stack.spacing = 25
         stack.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(stack)
-
+        
         let container = UIStackView(arrangedSubviews: [titleLabel, card, hintLabel])
         container.axis = .vertical
         container.alignment = .center
         container.spacing = 40
         container.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(container)
-
+        
         NSLayoutConstraint.activate([
             container.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             container.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
             container.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
-
+            
             card.leadingAnchor.constraint(equalTo: container.leadingAnchor),
             card.trailingAnchor.constraint(equalTo: container.trailingAnchor),
             card.heightAnchor.constraint(equalToConstant: 240),
-
+            
             stack.centerXAnchor.constraint(equalTo: card.centerXAnchor),
             stack.centerYAnchor.constraint(equalTo: card.centerYAnchor),
-
+            
             titleLabel.topAnchor.constraint(greaterThanOrEqualTo: view.safeAreaLayoutGuide.topAnchor, constant: 60),
         ])
     }
-
+    
     private func setupActions() {
         moveButton.addTarget(self, action: #selector(moveTapped), for: .touchUpInside)
     }
-
+    
     // MARK: - Actions
     @objc private func moveTapped() {
-        guard let name = nameField.text?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !name.isEmpty else {
-            let alert = UIAlertController(title: "Missing Name", message: "Please enter your name.", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
-            present(alert, animated: true)
-            return
-        }
+        guard let name = nameField.text, !name.isEmpty else { return }
 
         if isCreator {
             let hostID = RoomManager.shared.currentUserID
@@ -176,27 +170,36 @@ class EnterNameViewController: UIViewController {
                 .document(roomCode)
                 .collection("players")
                 .document(hostID)
-                .updateData(["name": name]) { _ in
-                    let vc = RoomLobbyViewController(roomCode: self.roomCode)
-                    self.navigationController?.pushViewController(vc, animated: true)
+                .setData([
+                    "name": name,
+                    "isHost": true
+                ], merge: true) { _ in
+                    self.go()
                 }
 
             return
         }
 
-        let newID = UUID().uuidString
+
+        // JOINER: use NEW ID & update currentUserID
+        let uid = UUID().uuidString
+        RoomManager.shared.currentUserID = uid
+
         RoomManager.shared.addPlayer(
-            id: newID,
+            id: uid,
             name: name,
             isHost: false,
             to: roomCode
         ) { _ in
-            RoomManager.shared.currentUserID = newID
+            self.go()
+        }
+    }
 
-            DispatchQueue.main.async {
-                let vc = RoomLobbyViewController(roomCode: self.roomCode)
-                self.navigationController?.pushViewController(vc, animated: true)
-            }
+    
+    private func go() {
+        DispatchQueue.main.async {
+            let vc = RoomLobbyViewController(roomCode: self.roomCode)
+            self.navigationController?.pushViewController(vc, animated: true)
         }
     }
 }

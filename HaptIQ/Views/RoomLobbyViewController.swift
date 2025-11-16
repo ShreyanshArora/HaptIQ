@@ -158,38 +158,56 @@ final class RoomLobbyViewController: UIViewController {
         rolesListener = Firestore.firestore()
             .collection("rooms")
             .document(roomCode)
-            .addSnapshotListener { [weak self] snap, _ in
+            .addSnapshotListener { snap, _ in
                 
-                guard let self = self else { return }
                 guard let data = snap?.data(),
                       let roles = data["roles"] as? [String: String] else { return }
-                
+
                 RoomManager.shared.cachedRoles = roles
-                
-                // If MY ROLE exists → go to Haptics screen
+
                 if let myRole = roles[RoomManager.shared.currentUserID] {
-                    self.moveToHapticsScreen(myRole)
+                    self.moveToHaptics(myRole)
                 }
             }
     }
-    
+
     
     // MARK: - Assign Roles (HOST ONLY)
     @objc private func startGameTapped() {
-        print("Players:", players)
-        print("Host is:", players.first(where: { $0.isHost })?.id ?? "NO HOST")
-        print("My ID:", RoomManager.shared.currentUserID)
 
-        guard let host = players.first(where: { $0.isHost }) else { return }
-        
-        if host.id != RoomManager.shared.currentUserID {
-            print("🚨 YOU ARE NOT HOST → Start blocked")
+        guard let host = players.first(where: { $0.isHost }) else {
+            print("NO HOST FOUND")
             return
         }
-        
-        print("🎉 YOU ARE HOST → Assigning roles")
-        assignRolesAndStartGame()
+
+        print("Host is:", host.id)
+        print("My ID is:", RoomManager.shared.currentUserID)
+
+        if host.id != RoomManager.shared.currentUserID {
+            print("❌ You are not the host. Cannot start game.")
+            return
+        }
+
+        assignRoles()
     }
+
+
+    private func assignRoles() {
+        guard players.count >= 2 else { return }
+
+        let imposter = players.randomElement()!
+        var roles: [String: String] = [:]
+
+        for p in players {
+            roles[p.id] = (p.id == imposter.id ? "imposter" : "crewmate")
+        }
+
+        Firestore.firestore()
+            .collection("rooms")
+            .document(roomCode)
+            .updateData(["roles": roles])
+    }
+
 
     
     private func assignRolesAndStartGame() {
@@ -219,13 +237,12 @@ final class RoomLobbyViewController: UIViewController {
     
     
     // MARK: - Navigation
-    private func moveToHapticsScreen(_ myRole: String) {
-        
+    private func moveToHaptics(_ role: String) {
         let vc = HapticsRoomViewController()
-        vc.role = (myRole == "imposter") ? .imposter : .crewmate
-        
+        vc.role = (role == "imposter" ? .imposter : .crewmate)
         navigationController?.pushViewController(vc, animated: true)
     }
+
     
     
     // MARK: - Grid Logic
