@@ -10,19 +10,6 @@ class JoinRoomViewController: UIViewController {
         return iv
     }()
 
-    // MARK: - Top Bar Icons
-    private let profileButton: UIButton = {
-        let b = UIButton(type: .system)
-        b.setImage(UIImage(named: "char1"), for: .normal) // Replace with your avatar
-        b.layer.cornerRadius = 25
-        b.layer.borderWidth = 2
-        b.layer.borderColor = UIColor.white.cgColor
-        b.clipsToBounds = true
-        b.backgroundColor = UIColor(white: 0.2, alpha: 0.5)
-        b.translatesAutoresizingMaskIntoConstraints = false
-        return b
-    }()
-    
 
 
     // MARK: - Characters
@@ -101,7 +88,7 @@ class JoinRoomViewController: UIViewController {
     // MARK: - Layout
     private func setupLayout() {
         view.addSubview(backgroundImage)
-        view.addSubview(profileButton)
+        
         view.addSubview(leftCharacter)
         view.addSubview(rightCharacter)
         view.addSubview(titleBanner)
@@ -115,12 +102,6 @@ class JoinRoomViewController: UIViewController {
             backgroundImage.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             backgroundImage.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             backgroundImage.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-
-            // Top Left - Profile
-            profileButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 15),
-            profileButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            profileButton.widthAnchor.constraint(equalToConstant: 50),
-            profileButton.heightAnchor.constraint(equalToConstant: 50),
 
             // Left Character - extreme edge, centered
             leftCharacter.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: -30),
@@ -166,7 +147,7 @@ class JoinRoomViewController: UIViewController {
 
     @objc private func joinTapped() {
         // Navigate to room code entry screen
-        let vc = RoomCodeEntryViewController()
+        let vc = RoomCodeEntry()
         navigationController?.pushViewController(vc, animated: true)
     }
 

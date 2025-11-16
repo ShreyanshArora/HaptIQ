@@ -1,6 +1,6 @@
 import UIKit
 
-class RoomCodeEntryViewController: UIViewController {
+class RoomCodeEntry: UIViewController {
 
     // MARK: - Background
     private let backgroundImage: UIImageView = {
@@ -151,7 +151,7 @@ class RoomCodeEntryViewController: UIViewController {
 
             // Right Character - bigger size
             rightCharacter.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 50),
-            rightCharacter.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 140),
+            rightCharacter.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 210),
             rightCharacter.widthAnchor.constraint(equalToConstant: 240),
             rightCharacter.heightAnchor.constraint(equalToConstant: 400),
 
