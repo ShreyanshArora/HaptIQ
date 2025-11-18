@@ -31,3 +31,17 @@ extension UIViewController {
         }
     }
 }
+extension UIViewController {
+    func addBackButton() {
+        let btn = UIBarButtonItem(image: UIImage(systemName: "chevron.left"),
+                                  style: .plain,
+                                  target: self,
+                                  action: #selector(goBack))
+        btn.tintColor = .white
+        navigationItem.leftBarButtonItem = btn
+    }
+
+    @objc func goBack() {
+        navigationController?.popViewController(animated: true)
+    }
+}
