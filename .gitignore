@@ -1,0 +1,8 @@
+# Xcode user data (must be ignored)
+xcuserdata/
+
+# Xcode workspace junk
+*.xcuserstate
+
+# Derived Data
+DerivedData/
