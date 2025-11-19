@@ -40,7 +40,7 @@ class EnterNameViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .black
+        view.backgroundColor = .systemBlue
         view.addSubview(nameField)
         view.addSubview(moveButton)
         setupConstraints()
