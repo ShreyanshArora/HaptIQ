@@ -25,7 +25,7 @@ final class HapticsRoomViewController: UIViewController {
 
     // MARK: UI
     private let bgImage: UIImageView = {
-        let iv = UIImageView(image: UIImage(named: "bgHex"))
+        let iv = UIImageView(image: UIImage(named: "bghex"))
         iv.contentMode = .scaleAspectFill
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv

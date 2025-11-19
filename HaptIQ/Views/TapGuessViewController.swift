@@ -1,7 +1,7 @@
 //
 //  TapGuessViewController.swift
 //  HaptIQ
-//
+// 
 
 import UIKit
 import FirebaseFirestore
@@ -19,7 +19,7 @@ final class TapGuessViewController: UIViewController {
 
     // UI
     private let bgImage: UIImageView = {
-        let iv = UIImageView(image: UIImage(named: "bgHex"))
+        let iv = UIImageView(image: UIImage(named: "bghex"))
         iv.contentMode = .scaleAspectFill
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
