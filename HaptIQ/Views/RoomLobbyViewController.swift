@@ -15,7 +15,7 @@ final class RoomLobbyViewController: UIViewController {
         let l = UILabel()
         l.text = "Players Joined"
         l.textColor = .white
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 36)
+        l.font = UIFont(name: "Aclonica-Regular", size: 36)
         l.textAlignment = .center
         return l
     }()
@@ -23,7 +23,7 @@ final class RoomLobbyViewController: UIViewController {
     private let codeLabel: UILabel = {
         let l = UILabel()
         l.textColor = .white
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 22)
+        l.font = UIFont(name: "Aclonica-Regular", size: 22)
         l.textAlignment = .center
         l.text = ""
         return l

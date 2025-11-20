@@ -18,7 +18,7 @@ final class VotingViewController: UIViewController {
         let l = UILabel()
         l.text = "Who is the Imposter?"
         l.textColor = .white
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 38)
+        l.font = UIFont(name: "Aclonica-Regular", size: 38)
         l.textAlignment = .center
         l.translatesAutoresizingMaskIntoConstraints = false
         return l
@@ -35,7 +35,7 @@ final class VotingViewController: UIViewController {
     private let voteButton: UIButton = {
         let b = UIButton(type: .system)
         b.setTitle("CAST VOTE", for: .normal)
-        b.titleLabel?.font = UIFont(name: "WinniePERSONALUSE", size: 24)
+        b.titleLabel?.font = UIFont(name: "Aclonica-Regular", size: 24)
         b.setTitleColor(.white, for: .normal)
         b.backgroundColor = UIColor(red: 255/255, green: 72/255, blue: 72/255, alpha: 1)
         b.layer.cornerRadius = 18
@@ -129,7 +129,7 @@ final class VoteCell: UITableViewCell {
         layer.cornerRadius = 12
         layer.masksToBounds = true
         
-        nameLabel.font = UIFont(name: "WinniePERSONALUSE", size: 22)
+        nameLabel.font = UIFont(name: "Aclonica-Regular", size: 22)
         nameLabel.textColor = .white
         nameLabel.textAlignment = .center
         nameLabel.translatesAutoresizingMaskIntoConstraints = false

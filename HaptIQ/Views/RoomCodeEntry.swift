@@ -38,7 +38,7 @@ class RoomCodeEntry: UIViewController {
     private let titleLabel: UILabel = {
         let l = UILabel()
         l.text = "Haptic Hunt"
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 40)
+        l.font = UIFont(name: "Aclonica-Regular", size: 40)
         l.textColor = .white
         l.textAlignment = .center
         l.translatesAutoresizingMaskIntoConstraints = false
@@ -60,7 +60,7 @@ class RoomCodeEntry: UIViewController {
     private let roomCodeLabel: UILabel = {
         let l = UILabel()
         l.text = "Room Code"
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 36)
+        l.font = UIFont(name: "Aclonica-Regular", size: 36)
         l.textColor = .white
         l.textAlignment = .center
         l.translatesAutoresizingMaskIntoConstraints = false
@@ -70,7 +70,7 @@ class RoomCodeEntry: UIViewController {
     private let codeTextField: UITextField = {
         let tf = UITextField()
         tf.placeholder = "8a2c9"
-        tf.font = UIFont(name: "WinniePERSONALUSE", size: 32)
+        tf.font = UIFont(name: "Aclonica-Regular", size: 32)
         tf.textAlignment = .center
         tf.textColor = UIColor(red: 10/255, green: 30/255, blue: 60/255, alpha: 1)
         tf.backgroundColor = UIColor(red: 100/255, green: 180/255, blue: 255/255, alpha: 1)
@@ -86,7 +86,7 @@ class RoomCodeEntry: UIViewController {
         let b = UIButton(type: .system)
         b.setTitle("Next", for: .normal)
         b.setTitleColor(.white, for: .normal)
-        b.titleLabel?.font = UIFont(name: "WinniePERSONALUSE", size: 32)
+        b.titleLabel?.font = UIFont(name: "Aclonica-Regular", size: 32)
         b.layer.cornerRadius = 20
         b.layer.borderColor = UIColor.white.cgColor
         b.layer.borderWidth = 3

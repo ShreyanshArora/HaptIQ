@@ -34,7 +34,7 @@ class OnboardingPageVC: UIViewController {
         // LABEL
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = page.text
-        label.font = UIFont(name: "Alconica-Regular", size: 22)
+        label.font = UIFont(name: "Aclonica-Regular", size: 22)
         label.textColor = .white
         label.numberOfLines = 0
         label.textAlignment = .center

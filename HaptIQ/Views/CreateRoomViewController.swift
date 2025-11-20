@@ -14,7 +14,7 @@ class CreateRoomViewController: UIViewController {
         let l = UILabel()
         l.text = "Share this code with your friends"
         l.textColor = .white
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 26)
+        l.font = UIFont(name: "Aclonica-Regular", size: 26)
         l.textAlignment = .center
         l.numberOfLines = 2
         return l
@@ -36,7 +36,7 @@ class CreateRoomViewController: UIViewController {
         l.text = "CREATE ROOM"
         l.textColor = .white
         l.textAlignment = .center
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 30)
+        l.font = UIFont(name: "Aclonica-Regular", size: 30)
         return l
     }()
 
@@ -44,7 +44,7 @@ class CreateRoomViewController: UIViewController {
         let l = UILabel()
         l.textAlignment = .center
         l.textColor = .orange
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 24)
+        l.font = UIFont(name: "Aclonica-Regular", size: 24)
         l.backgroundColor = .white
         l.layer.cornerRadius = 10
         l.layer.masksToBounds = true
@@ -58,7 +58,7 @@ class CreateRoomViewController: UIViewController {
         button.setTitle("NEXT", for: .normal)
         button.backgroundColor = UIColor(red: 21/255, green: 174/255, blue: 21/255, alpha: 1.0)
         button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.font = UIFont(name: "WinniePERSONALUSE", size: 32)
+        button.titleLabel?.font = UIFont(name: "Aclonica-Regular", size: 32)
         button.layer.cornerRadius = 20
         button.layer.shadowColor = UIColor.black.cgColor
         button.layer.shadowOpacity = 0.2
@@ -73,7 +73,7 @@ class CreateRoomViewController: UIViewController {
     private let copyHint: UILabel = {
         let l = UILabel()
         l.text = "Tap to copy the code anuj"
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 24)
+        l.font = UIFont(name: "Aclonica-Regular", size: 24)
         l.textColor  = .white
         l.textAlignment = .center
         return l

@@ -4,8 +4,9 @@
 <dict>
 	<key>UIAppFonts</key>
 	<array>
-		<string>WinniePersonalUse-OG5dP.otf</string>
-		<string>WinniePersonalUse-E451e.ttf</string>
+		<string>Aclonica-Regular-OG5dP.otf</string>
+		<string>Aclonica-Regular-E451e.ttf</string>
+		<string>Aclonica-Regular.ttf</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>

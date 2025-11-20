@@ -73,7 +73,7 @@ class HapticHuntLogo: UIViewController {
         title.text = "HaPtIc HuNt"
         title.textAlignment = .center
         title.textColor = .white
-        title.font = UIFont(name: "WinniePERSONALUSE", size: 39) // your font
+        title.font = UIFont(name: "Aclonica-Regular", size: 39) // your font
 
         // Add views
         view.addSubview(logoView)

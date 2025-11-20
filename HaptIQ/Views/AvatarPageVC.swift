@@ -25,7 +25,7 @@ class AvatarPageVC: UIViewController {
         l.textColor = .white
         l.numberOfLines = 2
         l.translatesAutoresizingMaskIntoConstraints = false
-        l.font = UIFont(name: "Alconica-Regular", size: 24)   // custom font
+        l.font = UIFont(name: "Aclonica-Regular", size: 24)   // custom font
         return l
     }()
 

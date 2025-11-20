@@ -19,7 +19,7 @@ final class SpectatorViewController: UIViewController {
     private let titleLabel: UILabel = {
         let l = UILabel()
         l.text = "ELIMINATED"
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 48)
+        l.font = UIFont(name: "Aclonica-Regular", size: 48)
         l.textAlignment = .center
         l.textColor = .white
         l.translatesAutoresizingMaskIntoConstraints = false
@@ -29,7 +29,7 @@ final class SpectatorViewController: UIViewController {
     private let subtitleLabel: UILabel = {
         let l = UILabel()
         l.text = "You are now spectating the game."
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 24)
+        l.font = UIFont(name: "Aclonica-Regular", size: 24)
         l.textAlignment = .center
         l.textColor = .white
         l.numberOfLines = 2
