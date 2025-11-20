@@ -2,7 +2,6 @@ import UIKit
 
 class CreateRoomViewController: UIViewController {
     private let roomCode: String
-    private let gradientLayer = CAGradientLayer()
 
     init(roomCode: String) {
         self.roomCode = roomCode
@@ -10,169 +9,214 @@ class CreateRoomViewController: UIViewController {
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    private let tipLabel: UILabel = {
-        let l = UILabel()
-        l.text = "Share this code with your friends"
-        l.textColor = .white
-        l.font = UIFont(name: "Aclonica-Regular", size: 26)
-        l.textAlignment = .center
-        l.numberOfLines = 2
-        return l
+    // MARK: - Background
+    private let backgroundImage: UIImageView = {
+        let iv = UIImageView(image: UIImage(named: "bghex"))
+        iv.contentMode = .scaleAspectFill
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
     }()
 
-    private let card: UIView = {
-        let view = UIView()
-        view.layer.cornerRadius = 25
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOpacity = 0.25
-        view.layer.shadowRadius = 8
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
+    // MARK: - Characters
+    private let leftCharacter: UIImageView = {
+        let iv = UIImageView(image: UIImage(named: "leftChar"))
+        iv.contentMode = .scaleAspectFit
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
     }()
+
+    private let rightCharacter: UIImageView = {
+        let iv = UIImageView(image: UIImage(named: "rightChar"))
+        iv.contentMode = .scaleAspectFit
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
+    }()
+
+    // MARK: - Title
+    private let titleBanner: UIImageView = {
+        let iv = UIImageView(image: UIImage(named: "titleBanner"))
+        iv.contentMode = .scaleAspectFit
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        iv.transform = CGAffineTransform(rotationAngle: -0.08)
+        iv.alpha = 0.7
+        return iv
+    }()
+
     private let titleLabel: UILabel = {
         let l = UILabel()
-        l.text = "CREATE ROOM"
+        l.text = "Haptic Hunt"
+        l.font = UIFont(name: "Aclonica-Regular", size: 40)
         l.textColor = .white
         l.textAlignment = .center
-        l.font = UIFont(name: "Aclonica-Regular", size: 30)
+        l.translatesAutoresizingMaskIntoConstraints = false
+        l.transform = CGAffineTransform(rotationAngle:  -0.2)
         return l
     }()
 
-    private let codeLabel: UILabel = {
+    // MARK: - Card Container
+    private let cardView: UIView = {
+        let v = UIView()
+        v.backgroundColor = UIColor(red: 10/255, green: 30/255, blue: 60/255, alpha: 0.95)
+        v.layer.cornerRadius = 30
+        v.layer.borderWidth = 3
+        v.layer.borderColor = UIColor.white.cgColor
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
+    }()
+
+    private let roomCodeLabel: UILabel = {
         let l = UILabel()
+        l.text = "Room Code"
+        l.font = UIFont(name: "Aclonica-Regular", size: 36)
+        l.textColor = .white
         l.textAlignment = .center
-        l.textColor = .orange
-        l.font = UIFont(name: "Aclonica-Regular", size: 24)
-        l.backgroundColor = .white
-        l.layer.cornerRadius = 10
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
+    }()
+
+    private let codeTextField: UILabel = {
+        let l = UILabel()
+        l.font = UIFont(name: "Aclonica-Regular", size: 32)
+        l.textAlignment = .center
+        l.textColor = UIColor(red: 10/255, green: 30/255, blue: 60/255, alpha: 1)
+        l.backgroundColor = UIColor(red: 100/255, green: 180/255, blue: 255/255, alpha: 1)
+        l.layer.cornerRadius = 20
+        l.layer.borderWidth = 3
+        l.layer.borderColor = UIColor.white.cgColor
         l.layer.masksToBounds = true
-        l.heightAnchor.constraint(equalToConstant: 51).isActive = true
-        l.widthAnchor.constraint(equalToConstant: 218).isActive = true
+        l.translatesAutoresizingMaskIntoConstraints = false
         return l
     }()
 
     private let nextButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("NEXT", for: .normal)
-        button.backgroundColor = UIColor(red: 21/255, green: 174/255, blue: 21/255, alpha: 1.0)
-        button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.font = UIFont(name: "Aclonica-Regular", size: 32)
-        button.layer.cornerRadius = 20
-        button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOpacity = 0.2
-        button.layer.shadowRadius = 3
-        button.layer.shadowOffset = CGSize(width: 3, height: 2)
-        button.heightAnchor.constraint(equalToConstant: 48).isActive = true
-        button.widthAnchor.constraint(equalToConstant: 185).isActive = true
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-    
-    private let copyHint: UILabel = {
-        let l = UILabel()
-        l.text = "Tap to copy the code anuj"
-        l.font = UIFont(name: "Aclonica-Regular", size: 24)
-        l.textColor  = .white
-        l.textAlignment = .center
-        return l
+        let b = UIButton(type: .system)
+        b.setTitle("Next", for: .normal)
+        b.setTitleColor(.white, for: .normal)
+        b.titleLabel?.font = UIFont(name: "Aclonica-Regular", size: 32)
+        b.layer.cornerRadius = 20
+        b.layer.borderColor = UIColor.white.cgColor
+        b.layer.borderWidth = 3
+        b.backgroundColor = UIColor(red: 0/255, green: 200/255, blue: 80/255, alpha: 1)
+        b.translatesAutoresizingMaskIntoConstraints = false
+        return b
     }()
 
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupGradient()
-        setupUI()
-        layoutUI()
-        addFigmaBackButton()
-        codeLabel.text = roomCode
+        navigationController?.setNavigationBarHidden(false, animated: false)
+        setupBackButton()
+        setupLayout()
+        setupActions()
+        
+        codeTextField.text = roomCode
+        
+        // Tap to copy
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(copyCode))
+        codeTextField.isUserInteractionEnabled = true
+        codeTextField.addGestureRecognizer(tapGesture)
     }
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        card.applyGradient(
-            colors: [
-                UIColor(red: 232/255, green: 110/255, blue: 40/255, alpha: 1),
-                UIColor(red: 242/255, green: 61/255, blue: 44/255, alpha: 1),
-                UIColor(red: 255/255, green: 0/255, blue: 4/255, alpha: 1)
-            ],
-            startPoint: CGPoint(x: 0, y: 0),
-            endPoint: CGPoint(x: 1, y: 1),
-            cornerRadius: 25
+    // MARK: - Back Button
+    private func setupBackButton() {
+        let backButton = UIBarButtonItem(
+            image: UIImage(systemName: "chevron.left"),
+            style: .plain,
+            target: self,
+            action: #selector(backTapped)
         )
-        gradientLayer.frame = view.bounds
+        backButton.tintColor = .white
+        navigationItem.leftBarButtonItem = backButton
     }
 
-    private func setupGradient() {
-        gradientLayer.colors = [
-            UIColor(red: 0xE8/255, green: 0x6E/255, blue: 0x28/255, alpha: 1.0).cgColor,
-            UIColor(red: 0xF2/255, green: 0x3D/255, blue: 0x2C/255, alpha: 1.0).cgColor,
-            UIColor(red: 0xFF/255, green: 0x00/255, blue: 0x04/255, alpha: 1.0).cgColor
-        ]
-        gradientLayer.locations = [0.0, 0.5, 1.0]
-        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
-        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
-        view.layer.insertSublayer(gradientLayer, at: 0)
-    }
-
-    private func setupUI() {
-        view.backgroundColor = .black
-        card.backgroundColor = UIColor.white.withAlphaComponent(0.15)
-        card.layer.cornerRadius = 24
-        nextButton.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
-
-        let tap = UITapGestureRecognizer(target: self, action: #selector(copyCode))
-        codeLabel.isUserInteractionEnabled = true
-        codeLabel.addGestureRecognizer(tap)
-    }
-                            // useless code dont have any use
-//    private func styleButton(_ b: UIButton, title: String, background: UIColor) {
-//        b.setTitle(title, for: .normal)
-//        b.setTitleColor(.white, for: .normal)
-//        b.backgroundColor = background
-//        b.layer.cornerRadius = 14
-//        b.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
-//        b.heightAnchor.constraint(equalToConstant: 52).isActive = true
-//    }
-
-    private func layoutUI() {
-        let container = UIStackView(arrangedSubviews: [tipLabel, card, copyHint])
-        container.axis = .vertical
-        container.spacing = 50
-        container.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(container)
-
-        let cardStack = UIStackView(arrangedSubviews: [titleLabel, codeLabel, nextButton])
-        cardStack.axis = .vertical
-        cardStack.spacing = 45
-        cardStack.alignment = .center
-        cardStack.translatesAutoresizingMaskIntoConstraints = false
-        card.addSubview(cardStack)
+    // MARK: - Layout
+    private func setupLayout() {
+        view.addSubview(backgroundImage)
+        view.addSubview(cardView)
+        view.addSubview(leftCharacter)
+        view.addSubview(rightCharacter)
+        view.addSubview(titleBanner)
+        view.addSubview(titleLabel)
+        
+        cardView.addSubview(roomCodeLabel)
+        cardView.addSubview(codeTextField)
+        cardView.addSubview(nextButton)
 
         NSLayoutConstraint.activate([
-            // Container
-            container.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
-            container.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
-            container.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 100),
+            // Background
+            backgroundImage.topAnchor.constraint(equalTo: view.topAnchor),
+            backgroundImage.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            backgroundImage.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            backgroundImage.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-            // Card stack inside card
-            cardStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 20),
-            cardStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -20),
-            cardStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 20),
-            cardStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -20)
+            // Left Character - bigger
+            leftCharacter.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: -30),
+            leftCharacter.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -20),
+            leftCharacter.widthAnchor.constraint(equalToConstant: 320),
+            leftCharacter.heightAnchor.constraint(equalToConstant: 520),
+
+            // Right Character - lower
+            rightCharacter.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 50),
+            rightCharacter.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 180),
+            rightCharacter.widthAnchor.constraint(equalToConstant: 240),
+            rightCharacter.heightAnchor.constraint(equalToConstant: 400),
+
+            // Title banner
+            titleBanner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            titleBanner.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 60),
+            titleBanner.widthAnchor.constraint(equalToConstant: 300),
+            titleBanner.heightAnchor.constraint(equalToConstant: 110),
+
+            // Title text
+            titleLabel.centerXAnchor.constraint(equalTo: titleBanner.centerXAnchor),
+            titleLabel.centerYAnchor.constraint(equalTo: titleBanner.centerYAnchor),
+
+            // Card View
+            cardView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            cardView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 50),
+            cardView.widthAnchor.constraint(equalToConstant: 340),
+            cardView.heightAnchor.constraint(equalToConstant: 340),
+
+            // Room Code Label
+            roomCodeLabel.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 30),
+            roomCodeLabel.centerXAnchor.constraint(equalTo: cardView.centerXAnchor),
+
+            // Code Text Field
+            codeTextField.centerXAnchor.constraint(equalTo: cardView.centerXAnchor),
+            codeTextField.centerYAnchor.constraint(equalTo: cardView.centerYAnchor, constant: 10),
+            codeTextField.widthAnchor.constraint(equalToConstant: 260),
+            codeTextField.heightAnchor.constraint(equalToConstant: 60),
+
+            // Next Button
+            nextButton.centerXAnchor.constraint(equalTo: cardView.centerXAnchor),
+            nextButton.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -30),
+            nextButton.widthAnchor.constraint(equalToConstant: 260),
+            nextButton.heightAnchor.constraint(equalToConstant: 60)
         ])
     }
 
-
-    @objc private func copyCode() {
-        UIPasteboard.general.string = roomCode
+    // MARK: - Actions
+    private func setupActions() {
+        nextButton.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
     }
 
     @objc private func nextTapped() {
-        
         let vc = EnterNameViewController(roomCode: roomCode, isCreator: true)
         navigationController?.pushViewController(vc, animated: true)
     }
 
-
+    @objc private func backTapped() {
+        navigationController?.popViewController(animated: true)
+    }
+    
+    @objc private func copyCode() {
+        UIPasteboard.general.string = roomCode
+        
+        // Show feedback
+        let alert = UIAlertController(title: "Copied!", message: "Room code copied to clipboard", preferredStyle: .alert)
+        present(alert, animated: true)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            alert.dismiss(animated: true)
+        }
+    }
 }
