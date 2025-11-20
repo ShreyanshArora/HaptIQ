@@ -13,6 +13,7 @@ final class HapticsRoomViewController: UIViewController {
     var rumbleCount: Int = 0            // updated from Firestore
     var players: [RoomManager.Player] = []
     var role: PlayerRole
+    var currentRound: Int = 1  // NEW: Track round number
 
     enum PlayerRole { case crewmate, imposter }
 
