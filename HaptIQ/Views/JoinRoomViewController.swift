@@ -40,7 +40,7 @@ class JoinRoomViewController: UIViewController {
     private let titleLabel: UILabel = {
         let l = UILabel()
         l.text = "Haptic Hunt"
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 48)
+        l.font = UIFont(name: "Aclonica-Regular", size: 48)
         l.textColor = .white
         l.textAlignment = .center
         l.translatesAutoresizingMaskIntoConstraints = false
@@ -53,7 +53,7 @@ class JoinRoomViewController: UIViewController {
         let b = UIButton(type: .system)
         b.setTitle("Create Room", for: .normal)
         b.setTitleColor(.white, for: .normal)
-        b.titleLabel?.font = UIFont(name: "WinniePERSONALUSE", size: 32)
+        b.titleLabel?.font = UIFont(name: "Aclonica-Regular", size: 32)
         b.layer.cornerRadius = 25
         b.layer.borderColor = UIColor.white.cgColor
         b.layer.borderWidth = 3
@@ -66,7 +66,7 @@ class JoinRoomViewController: UIViewController {
         let b = UIButton(type: .system)
         b.setTitle("Join Room", for: .normal)
         b.setTitleColor(.white, for: .normal)
-        b.titleLabel?.font = UIFont(name: "WinniePERSONALUSE", size: 32)
+        b.titleLabel?.font = UIFont(name: "Aclonica-Regular", size: 32)
         b.layer.cornerRadius = 25
         b.layer.borderColor = UIColor.white.cgColor
         b.layer.borderWidth = 3

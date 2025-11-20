@@ -43,7 +43,7 @@ final class HapticsRoomViewController: UIViewController {
 
     private let roleLabel: UILabel = {
         let l = UILabel()
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 40)
+        l.font = UIFont(name: "Aclonica-Regular", size: 40)
         l.textColor = .white
         l.textAlignment = .center
         l.translatesAutoresizingMaskIntoConstraints = false
@@ -52,7 +52,7 @@ final class HapticsRoomViewController: UIViewController {
 
     private let statusLabel: UILabel = {
         let l = UILabel()
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 24)
+        l.font = UIFont(name: "Aclonica-Regular", size: 24)
         l.textColor = UIColor.white.withAlphaComponent(0.9)
         l.textAlignment = .center
         l.numberOfLines = 3
@@ -62,7 +62,7 @@ final class HapticsRoomViewController: UIViewController {
 
     private let timerLabel: UILabel = {
         let l = UILabel()
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 58)
+        l.font = UIFont(name: "Aclonica-Regular", size: 58)
         l.textColor = .yellow
         l.translatesAutoresizingMaskIntoConstraints = false
         l.textAlignment = .center

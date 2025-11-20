@@ -77,7 +77,7 @@ final class AvatarSelectionController: UIPageViewController {
     private func setupTitleLabel() {
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.text = "Select Your Avatar"
-        titleLabel.font = UIFont.systemFont(ofSize: 28, weight: .bold)
+        titleLabel.font = UIFont(name: "Aclonica-Regular", size: 28)
         titleLabel.textColor = .white
         titleLabel.textAlignment = .center
         

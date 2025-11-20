@@ -16,7 +16,7 @@ class EnterNameViewController: UIViewController {
     private let nameField: UITextField = {
         let tf = UITextField()
         tf.placeholder = "Your name"
-        tf.font = UIFont(name: "WinniePERSONALUSE", size: 22)
+        tf.font = UIFont(name: "Aclonica-Regular", size: 22)
         tf.backgroundColor = .white
         tf.layer.cornerRadius = 12
         tf.textAlignment = .center
@@ -32,7 +32,7 @@ class EnterNameViewController: UIViewController {
         b.setTitle("MOVE TO LOBBY", for: .normal)
         b.backgroundColor = UIColor(red: 21/255, green: 174/255, blue: 21/255, alpha: 1.0)
         b.setTitleColor(.white, for: .normal)
-        b.titleLabel?.font = UIFont(name: "WinniePERSONALUSE", size: 22)
+        b.titleLabel?.font = UIFont(name: "Aclonica-Regular", size: 22)
         b.layer.cornerRadius = 18
         b.translatesAutoresizingMaskIntoConstraints = false
         return b

@@ -46,7 +46,7 @@ class Instructions: UIViewController {
         let titleLabel = UILabel()
         titleLabel.text = "HOW TO PLAY !!"
         titleLabel.textColor = UIColor(red: 0xE8/255, green: 0x6E/255, blue: 0x28/255, alpha: 1)
-        titleLabel.font = UIFont(name: "WinniePERSONALUSE", size: 34)
+        titleLabel.font = UIFont(name: "Aclonica-Regular", size: 34)
         titleLabel.textAlignment = .center
         contentStack.addArrangedSubview(titleLabel)
         
@@ -59,7 +59,7 @@ your way out of trouble
         subtitle.numberOfLines = 0
         subtitle.textAlignment = .center
         subtitle.textColor = .white
-        subtitle.font = UIFont(name: "WinniePERSONALUSE", size: 19)
+        subtitle.font = UIFont(name: "Aclonica-Regular", size: 19)
         contentStack.addArrangedSubview(subtitle)
         
         // STEP 1 -----------------------
@@ -122,7 +122,7 @@ your way out of trouble
         // Step Label
         let stepLabel = UILabel()
         stepLabel.text = step
-        stepLabel.font = UIFont(name: "WinniePERSONALUSE", size: 32)
+        stepLabel.font = UIFont(name: "Aclonica-Regular", size: 32)
         stepLabel.textColor = UIColor(red: 0.95, green: 0.4, blue: 0.2, alpha: 1)
         stepLabel.textAlignment = .center
         
@@ -135,14 +135,14 @@ your way out of trouble
         // Title
         let titleLabel = UILabel()
         titleLabel.text = title
-        titleLabel.font = UIFont(name: "WinniePERSONALUSE", size: 30)
+        titleLabel.font = UIFont(name: "Aclonica-Regular", size: 30)
         titleLabel.textAlignment = .center
         titleLabel.textColor = UIColor(red: 0.95, green: 0.4, blue: 0.2, alpha: 1)
         
         // Description Top
         let descTop = UILabel()
         descTop.text = descriptionTop
-        descTop.font = UIFont(name: "WinniePERSONALUSE", size: 22)
+        descTop.font = UIFont(name: "Aclonica-Regular", size: 22)
         descTop.textColor = UIColor(red: 170/255, green: 200/255, blue: 255/255, alpha: 1)
         descTop.textAlignment = .center
         descTop.numberOfLines = 0
@@ -151,12 +151,12 @@ your way out of trouble
         let civTitle = UILabel()
         civTitle.text = "CIVILIAN"
         civTitle.textColor = .white
-        civTitle.font = UIFont(name: "WinniePERSONALUSE", size: 22)
+        civTitle.font = UIFont(name: "Aclonica-Regular", size: 22)
         
         let civDesc = UILabel()
         civDesc.text = civilianText
         civDesc.textColor = .white
-        civDesc.font = UIFont(name: "WinniePERSONALUSE", size: 20)
+        civDesc.font = UIFont(name: "Aclonica-Regular", size: 20)
         civDesc.numberOfLines = 0
         civDesc.textAlignment = .left
         
@@ -169,12 +169,12 @@ your way out of trouble
         let impTitle = UILabel()
         impTitle.text = "IMPOSTER"
         impTitle.textColor = .white
-        impTitle.font = UIFont(name: "WinniePERSONALUSE", size: 22)
+        impTitle.font = UIFont(name: "Aclonica-Regular", size: 22)
         
         let impDesc = UILabel()
         impDesc.text = imposterText
         impDesc.textColor = .white
-        impDesc.font = UIFont(name: "WinniePERSONALUSE", size: 20)
+        impDesc.font = UIFont(name: "Aclonica-Regular", size: 20)
         impDesc.numberOfLines = 0
         impDesc.textAlignment = .left
         

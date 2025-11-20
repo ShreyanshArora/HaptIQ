@@ -28,7 +28,7 @@ final class TapGuessViewController: UIViewController {
     private let counterLabel: UILabel = {
         let l = UILabel()
         l.text = "0"
-        l.font = UIFont(name: "WinniePERSONALUSE", size: 80)
+        l.font = UIFont(name: "Aclonica-Regular", size: 80)
         l.textColor = .white
         l.translatesAutoresizingMaskIntoConstraints = false
         return l
