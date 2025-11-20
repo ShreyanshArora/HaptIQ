@@ -44,20 +44,6 @@
 			);
 			target = E115687D2EB1591E00E0B24B /* HaptIQUITests */;
 		};
-		75F75D742ECED0C800C438D4 /* Exceptions for "HaptIQTests" folder in "HaptIQ" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				.gitignore,
-			);
-			target = E115685D2EB1591C00E0B24B /* HaptIQ */;
-		};
-		75F75D752ECED0C800C438D4 /* Exceptions for "HaptIQTests" folder in "HaptIQTests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				.gitignore,
-			);
-			target = E11568732EB1591E00E0B24B /* HaptIQTests */;
-		};
 		E11568862EB1591E00E0B24B /* Exceptions for "HaptIQ" folder in "HaptIQ" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -85,10 +71,6 @@
 		};
 		E11568772EB1591E00E0B24B /* HaptIQTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				75F75D742ECED0C800C438D4 /* Exceptions for "HaptIQTests" folder in "HaptIQ" target */,
-				75F75D752ECED0C800C438D4 /* Exceptions for "HaptIQTests" folder in "HaptIQTests" target */,
-			);
 			path = HaptIQTests;
 			sourceTree = "<group>";
 		};

@@ -80,7 +80,7 @@ final class HapticsRoomViewController: UIViewController {
         return b
     }()
 
-    // MARK: - Initializer (THIS IS THE ONE USED!)
+    // MARK: - Initializer
     init(roomCode: String,
          players: [RoomManager.Player],
          rumbleCount: Int,
@@ -95,7 +95,10 @@ final class HapticsRoomViewController: UIViewController {
     required init?(coder: NSCoder) { fatalError("init(coder:) not allowed") }
 
     // MARK: - Lifecycle
-    deinit { stateListener?.remove(); timer?.invalidate() }
+    deinit {
+        stateListener?.remove()
+        timer?.invalidate()
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -103,6 +106,11 @@ final class HapticsRoomViewController: UIViewController {
         continueButton.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
         addBackButton()
         startHapticsRound()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        timer?.invalidate()  // Stop timer when leaving screen
     }
 
     // MARK: UI
@@ -142,38 +150,39 @@ final class HapticsRoomViewController: UIViewController {
         ])
     }
 
-    
     @objc private func onBack() { navigationController?.popViewController(animated: true) }
 
     // MARK: - GAME ROUND
 
     private func startHapticsRound() {
         secondsLeft = 10
-        timerLabel.text = "10"
+        timerLabel.text = "\(secondsLeft)"
 
-        roleLabel.text = role == .crewmate ? "CREWMATE" : "IMPOSTER"
+        // 🎭 Everyone sees the same screen - no role revealed
+        roleLabel.text = "STAY SILENT"
+        statusLabel.text = "Count the haptics carefully..."
 
         if role == .crewmate {
-            statusLabel.text = "Feel the haptics..."
+            // Crewmate gets the actual haptics
             sentRumbles = rumbleCount
-            scheduleRumbles(count: rumbleCount)
+            
+            // 🔥 NEW: Use countable rumble pattern with delay
+            // Wait 2 seconds before starting the pattern so users are ready
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                HapticsEngineManager.shared.playCountableRumble(count: self.rumbleCount)
+            }
+            
         } else {
-            statusLabel.text = "Stay silent.\nYou receive no haptics."
+            // Imposter gets NOTHING but sees same screen
             sentRumbles = 0
+            // No haptics played - they must pretend!
         }
 
         startRoundTimer()
     }
 
-    private func scheduleRumbles(count: Int) {
-        guard count > 0 else { return }
-        let gap = 10.0 / Double(count + 1)
-        for i in 1...count {
-            DispatchQueue.main.asyncAfter(deadline: .now() + gap * Double(i)) {
-                HapticsEngineManager.shared.playRumble()
-            }
-        }
-    }
+    // ❌ REMOVED: Old scheduleRumbles method - no longer needed
+    // The new playCountableRumble handles all timing internally
 
     private func startRoundTimer() {
         timer?.invalidate()
@@ -181,12 +190,16 @@ final class HapticsRoomViewController: UIViewController {
             guard let s = self else { return }
             s.secondsLeft -= 1
             s.timerLabel.text = "\(s.secondsLeft)"
-            if s.secondsLeft <= 0 { s.timer?.invalidate(); s.finishRound() }
+            
+            if s.secondsLeft <= 0 {
+                s.timer?.invalidate()
+                s.finishRound()
+            }
         }
     }
 
     private func finishRound() {
-        statusLabel.text = "Time’s up!"
+        statusLabel.text = "Time's up!"
         continueButton.isHidden = false
     }
 
