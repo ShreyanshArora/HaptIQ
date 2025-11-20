@@ -10,8 +10,6 @@ class JoinRoomViewController: UIViewController {
         return iv
     }()
 
-
-
     // MARK: - Characters
     private let leftCharacter: UIImageView = {
         let iv = UIImageView(image: UIImage(named: "leftChar"))
@@ -33,7 +31,7 @@ class JoinRoomViewController: UIViewController {
         iv.contentMode = .scaleAspectFit
         iv.translatesAutoresizingMaskIntoConstraints = false
         iv.transform = CGAffineTransform(rotationAngle: -0.08)
-        iv.alpha = 0.7 // Make it transparent
+        iv.alpha = 0.7
         return iv
     }()
 
@@ -75,8 +73,6 @@ class JoinRoomViewController: UIViewController {
         return b
     }()
 
-
-
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -88,7 +84,6 @@ class JoinRoomViewController: UIViewController {
     // MARK: - Layout
     private func setupLayout() {
         view.addSubview(backgroundImage)
-        
         view.addSubview(leftCharacter)
         view.addSubview(rightCharacter)
         view.addSubview(titleBanner)
@@ -103,19 +98,19 @@ class JoinRoomViewController: UIViewController {
             backgroundImage.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             backgroundImage.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-            // Left Character - extreme edge, centered
-            leftCharacter.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: -30),
-            leftCharacter.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -20),
-            leftCharacter.widthAnchor.constraint(equalToConstant: 240),
-            leftCharacter.heightAnchor.constraint(equalToConstant: 400),
+            // Left Character - lower and bigger
+            leftCharacter.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: -50),
+            leftCharacter.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 60),
+            leftCharacter.widthAnchor.constraint(equalToConstant: 350),
+            leftCharacter.heightAnchor.constraint(equalToConstant: 530),
 
             // Right Character - extreme edge, lower
             rightCharacter.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 50),
-            rightCharacter.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 140),
+            rightCharacter.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 180),
             rightCharacter.widthAnchor.constraint(equalToConstant: 200),
             rightCharacter.heightAnchor.constraint(equalToConstant: 340),
 
-            // Title banner - bigger and tilted
+            // Title banner
             titleBanner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             titleBanner.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 100),
             titleBanner.widthAnchor.constraint(equalToConstant: 360),
