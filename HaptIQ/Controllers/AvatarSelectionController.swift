@@ -213,7 +213,7 @@ final class AvatarSelectionController: UIPageViewController {
         UserDefaults.standard.set(selectedAvatar.title, forKey: "selectedAvatarTitle")
         
         // Navigate to the next screen
-        let nextVC = JoinRoomViewController() // Replace GameViewController with your actual screen name
+        let nextVC = JoinRoomViewController()
         navigationController?.pushViewController(nextVC, animated: true)
     }
 }

@@ -1,201 +1,356 @@
 import Foundation
 import FirebaseFirestore
 
-class RoomManager {
+final class RoomManager {
+    
     static let shared = RoomManager()
     private init() {}
-
-    private let db = Firestore.firestore()
-
-    enum RoomError: Error {
-        case message(String)
-    }
-
+    
+    var currentUserID: String = UUID().uuidString
+    var cachedRoles: [String: String] = [:]
+    
+    // MARK: - Player Model
     struct Player {
         let id: String
         let name: String
         let isHost: Bool
+        let avatarImage: String?
+        let avatarTitle: String?
     }
-
-    // Identifies THIS device/user
-    // persisted for lifetime of app run — updated when user creates or joins
-    var currentUserID: String = UUID().uuidString
-
-    // Cached roles from Firestore
-    var cachedRoles: [String: String] = [:]
-
-    // CREATE ROOM (creates room doc + adds host player)
-    func createRoom(hostName: String? = nil,
-                    completion: @escaping (Result<String, RoomError>) -> Void) {
-
-        let code = String(format: "%06d", Int.random(in: 0...999999))
-
-        let roomRef = db.collection("rooms").document(code)
-
-        var data: [String: Any] = [
-            "createdAt": Timestamp(date: Date()),
-            "expiresAt": Timestamp(date: Date().addingTimeInterval(1800))
+    
+    // MARK: - Create Room
+    func createRoom(completion: @escaping (Result<String, Error>) -> Void) {
+        let code = generateRoomCode()
+        let hostID = currentUserID
+        
+        let roomData: [String: Any] = [
+            "code": code,
+            "hostID": hostID,
+            "createdAt": FieldValue.serverTimestamp(),
+            "state": "lobby",
+            "currentRound": 0
         ]
-
-        // hostName OPTIONAL
-        if let hostName = hostName {
-            data["hostName"] = hostName
-        }
-
-        roomRef.setData(data) { err in
-            if let err = err {
-                completion(.failure(.message(err.localizedDescription)))
+        
+        let db = Firestore.firestore()
+        
+        // Create room document
+        db.collection("rooms").document(code).setData(roomData) { error in
+            if let error = error {
+                completion(.failure(error))
                 return
             }
-
-            completion(.success(code))
-        }
-    }
-
-    // JOIN ROOM (checks room exists)
-    func joinRoom(withCode code: String, completion: @escaping (Result<Void, RoomError>) -> Void) {
-        let ref = db.collection("rooms").document(code)
-
-        ref.getDocument { doc, err in
-            if let err = err {
-                completion(.failure(.message(err.localizedDescription)))
-                return
-            }
-
-            guard let doc = doc, doc.exists else {
-                completion(.failure(.message("Room not found")))
-                return
-            }
-
-            completion(.success(()))
+            
+            // Create host player document (without name/avatar yet - will be set in EnterNameViewController)
+            db.collection("rooms")
+                .document(code)
+                .collection("players")
+                .document(hostID)
+                .setData([
+                    "isHost": true,
+                    "joinedAt": FieldValue.serverTimestamp()
+                ]) { error in
+                    if let error = error {
+                        completion(.failure(error))
+                    } else {
+                        completion(.success(code))
+                    }
+                }
         }
     }
-
-    // ADD PLAYER (sets currentUserID)
-    func addPlayer(id: String = UUID().uuidString,
-                   name: String,
-                   isHost: Bool = false,
-                   to roomCode: String,
-                   completion: ((Result<Void, RoomError>) -> Void)? = nil) {
-
-        currentUserID = id
-
-        let data: [String: Any] = [
+    
+    // MARK: - Join Room
+    func joinRoom(code: String, completion: @escaping (Result<Bool, Error>) -> Void) {
+        let db = Firestore.firestore()
+        
+        // Check if room exists
+        db.collection("rooms").document(code).getDocument { snapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let snapshot = snapshot, snapshot.exists else {
+                let error = NSError(domain: "RoomManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "Room not found"])
+                completion(.failure(error))
+                return
+            }
+            
+            // Room exists
+            completion(.success(true))
+        }
+    }
+    
+    // MARK: - Add Player
+    func addPlayer(id: String, name: String, isHost: Bool, to roomCode: String, completion: @escaping (Error?) -> Void) {
+        // Get avatar data from UserDefaults
+        let avatarImage = UserDefaults.standard.string(forKey: "selectedAvatarImage") ?? "char1"
+        let avatarTitle = UserDefaults.standard.string(forKey: "selectedAvatarTitle") ?? "Shadow Hacker"
+        
+        let playerData: [String: Any] = [
             "name": name,
-            "isHost": isHost
+            "isHost": isHost,
+            "avatarImage": avatarImage,
+            "avatarTitle": avatarTitle,
+            "joinedAt": FieldValue.serverTimestamp()
         ]
-
-        db.collection("rooms")
+        
+        Firestore.firestore()
+            .collection("rooms")
             .document(roomCode)
             .collection("players")
             .document(id)
-            .setData(data) { err in
-                if let err = err {
-                    completion?(.failure(.message(err.localizedDescription)))
-                } else {
-                    completion?(.success(()))
-                }
-            }
+            .setData(playerData, completion: completion)
     }
-
-    // OBSERVE PLAYERS (realtime)
-    func observePlayers(inRoom code: String,
-                        onChange: @escaping ([Player]) -> Void) -> ListenerRegistration {
-        return db.collection("rooms")
-            .document(code)
+    
+    // MARK: - Observe Players
+    func observePlayers(inRoom roomCode: String, completion: @escaping ([Player]) -> Void) -> ListenerRegistration {
+        return Firestore.firestore()
+            .collection("rooms")
+            .document(roomCode)
             .collection("players")
-            .addSnapshotListener { snap, err in
-
-                guard let docs = snap?.documents else {
-                    onChange([])
+            .addSnapshotListener { snapshot, error in
+                guard let docs = snapshot?.documents else {
+                    completion([])
                     return
                 }
-
+                
                 let players = docs.compactMap { doc -> Player? in
-                    let d = doc.data()
-                    guard let name = d["name"] as? String,
-                          let host = d["isHost"] as? Bool else { return nil }
-                    return Player(id: doc.documentID, name: name, isHost: host)
+                    let data = doc.data()
+                    guard let name = data["name"] as? String else { return nil }
+                    let isHost = data["isHost"] as? Bool ?? false
+                    let avatarImage = data["avatarImage"] as? String
+                    let avatarTitle = data["avatarTitle"] as? String
+                    
+                    return Player(
+                        id: doc.documentID,
+                        name: name,
+                        isHost: isHost,
+                        avatarImage: avatarImage,
+                        avatarTitle: avatarTitle
+                    )
                 }
-
-                onChange(players)
-            }
-    }
-
-    // ONE-TIME fetch players
-    func fetchPlayersOnce(inRoom code: String, completion: @escaping ([Player]) -> Void) {
-        db.collection("rooms")
-            .document(code)
-            .collection("players")
-            .getDocuments { snap, _ in
-                guard let docs = snap?.documents else { completion([]); return }
-                let players = docs.compactMap { doc -> Player? in
-                    let d = doc.data()
-                    guard let name = d["name"] as? String,
-                          let host = d["isHost"] as? Bool else { return nil }
-                    return Player(id: doc.documentID, name: name, isHost: host)
-                }
+                
                 completion(players)
             }
     }
-
-    // Observe room state (round, rumbleCount) that host writes
-    func observeState(inRoom code: String, onChange: @escaping (_ round: Int?, _ rumbleCount: Int?) -> Void) -> ListenerRegistration {
-        return db.collection("rooms").document(code)
-            .addSnapshotListener { snap, _ in
-                guard let data = snap?.data() else {
-                    onChange(nil, nil)
-                    return
-                }
-                if let state = data["state"] as? [String: Any] {
-                    let round = state["round"] as? Int
-                    let rumble = state["rumbleCount"] as? Int
-                    onChange(round, rumble)
-                } else {
-                    onChange(nil, nil)
-                }
+    
+    // MARK: - Observe Room State
+    func observeState(inRoom roomCode: String, completion: @escaping (Int, Int?) -> Void) -> ListenerRegistration {
+        return Firestore.firestore()
+            .collection("rooms")
+            .document(roomCode)
+            .addSnapshotListener { snapshot, error in
+                guard let data = snapshot?.data() else { return }
+                
+                let round = data["currentRound"] as? Int ?? 0
+                let rumble = data["rumbleCount"] as? Int
+                
+                completion(round, rumble)
             }
     }
-
-    // Host starts a new round: assigns roles and sets rumbleCount in state
-    func hostAssignRolesAndStartRound(roomCode: String, players: [Player], completion: ((Error?) -> Void)? = nil) {
-        guard players.count >= 2 else {
-            completion?(RoomError.message("Need at least 2 players") as? Error)
+    
+    // MARK: - Host Assign Roles and Start Round
+    func hostAssignRolesAndStartRound(roomCode: String, players: [Player], completion: @escaping (Error?) -> Void) {
+        guard players.count >= 3 else {
+            let error = NSError(domain: "RoomManager", code: 400, userInfo: [NSLocalizedDescriptionKey: "Need at least 3 players"])
+            completion(error)
             return
         }
-
-        // choose imposter
-        guard let imp = players.randomElement() else {
-            completion?(RoomError.message("No players") as? Error)
-            return
+        
+        // Randomly assign one imposter
+        let shuffled = players.shuffled()
+        let imposterID = shuffled[0].id
+        
+        var roles: [String: String] = [:]
+        for player in players {
+            roles[player.id] = (player.id == imposterID) ? "imposter" : "crewmate"
         }
-
-        var roleDict: [String: String] = [:]
-        for p in players {
-            roleDict[p.id] = (p.id == imp.id) ? "imposter" : "crewmate"
-        }
-
-        // choose rumbleCount for round
-        let rumble = Int.random(in: 2...5)
-
-        let roomRef = db.collection("rooms").document(roomCode)
-        let batch = db.batch()
-        // update roles
-        batch.updateData(["roles": roleDict], forDocument: roomRef)
-        // update state
-        let newState: [String: Any] = [
-            "state.round": FieldValue.increment(Int64(1)),
-            "state.rumbleCount": rumble
+        
+        // Generate random rumble count (e.g., 3-6)
+        let rumbleCount = Int.random(in: 3...6)
+        
+        let updateData: [String: Any] = [
+            "currentRound": 1,
+            "state": "playing",
+            "roles": roles,
+            "rumbleCount": rumbleCount,
+            "startedAt": FieldValue.serverTimestamp()
         ]
-        // Firestore can't update nested keys with batch.updateData same way - we'll just call update twice
-        roomRef.updateData(["roles": roleDict]) { err in
-            if let err = err {
-                completion?(err)
+        
+        Firestore.firestore()
+            .collection("rooms")
+            .document(roomCode)
+            .setData(updateData, merge: true, completion: completion)
+    }
+    
+    // MARK: - Submit Vote
+    func submitVote(roomCode: String, voterID: String, suspectID: String, completion: @escaping (Error?) -> Void) {
+        let voteData: [String: Any] = [
+            "voterID": voterID,
+            "suspectID": suspectID,
+            "timestamp": FieldValue.serverTimestamp()
+        ]
+        
+        Firestore.firestore()
+            .collection("rooms")
+            .document(roomCode)
+            .collection("votes")
+            .document(voterID)
+            .setData(voteData, completion: completion)
+    }
+    
+    // MARK: - Observe Votes
+    func observeVotes(inRoom roomCode: String, completion: @escaping ([String: String]) -> Void) -> ListenerRegistration {
+        return Firestore.firestore()
+            .collection("rooms")
+            .document(roomCode)
+            .collection("votes")
+            .addSnapshotListener { snapshot, error in
+                guard let docs = snapshot?.documents else {
+                    completion([:])
+                    return
+                }
+                
+                var votes: [String: String] = [:]
+                for doc in docs {
+                    if let voterID = doc.data()["voterID"] as? String,
+                       let suspectID = doc.data()["suspectID"] as? String {
+                        votes[voterID] = suspectID
+                    }
+                }
+                
+                completion(votes)
+            }
+    }
+    
+    // MARK: - Calculate Vote Results
+    func calculateVoteResults(votes: [String: String]) -> (mostVotedID: String?, voteCount: Int) {
+        guard !votes.isEmpty else { return (nil, 0) }
+        
+        // Count votes for each suspect
+        var voteCounts: [String: Int] = [:]
+        for (_, suspectID) in votes {
+            voteCounts[suspectID, default: 0] += 1
+        }
+        
+        // Find the suspect with most votes
+        let sorted = voteCounts.sorted { $0.value > $1.value }
+        guard let top = sorted.first else { return (nil, 0) }
+        
+        return (top.key, top.value)
+    }
+    
+    // MARK: - End Round
+    func endRound(roomCode: String, completion: @escaping (Error?) -> Void) {
+        let updateData: [String: Any] = [
+            "state": "ended",
+            "endedAt": FieldValue.serverTimestamp()
+        ]
+        
+        Firestore.firestore()
+            .collection("rooms")
+            .document(roomCode)
+            .setData(updateData, merge: true, completion: completion)
+    }
+    
+    // MARK: - Clear Votes
+    func clearVotes(roomCode: String, completion: @escaping (Error?) -> Void) {
+        let db = Firestore.firestore()
+        let votesRef = db.collection("rooms").document(roomCode).collection("votes")
+        
+        votesRef.getDocuments { snapshot, error in
+            if let error = error {
+                completion(error)
                 return
             }
-            roomRef.setData(["state": ["round": FieldValue.increment(Int64(1)), "rumbleCount": rumble]], merge: true) { err in
-                completion?(err)
+            
+            guard let docs = snapshot?.documents else {
+                completion(nil)
+                return
+            }
+            
+            let batch = db.batch()
+            for doc in docs {
+                batch.deleteDocument(doc.reference)
+            }
+            
+            batch.commit(completion: completion)
+        }
+    }
+    
+    // MARK: - Delete Room
+    func deleteRoom(code: String, completion: @escaping (Error?) -> Void) {
+        let db = Firestore.firestore()
+        let roomRef = db.collection("rooms").document(code)
+        
+        // Delete all players
+        roomRef.collection("players").getDocuments { snapshot, error in
+            if let error = error {
+                completion(error)
+                return
+            }
+            
+            let batch = db.batch()
+            
+            // Delete all player documents
+            snapshot?.documents.forEach { batch.deleteDocument($0.reference) }
+            
+            // Delete all votes
+            roomRef.collection("votes").getDocuments { voteSnapshot, _ in
+                voteSnapshot?.documents.forEach { batch.deleteDocument($0.reference) }
+                
+                // Delete the room itself
+                batch.deleteDocument(roomRef)
+                
+                batch.commit(completion: completion)
             }
         }
+    }
+    
+    // MARK: - Leave Room
+    func leaveRoom(roomCode: String, playerID: String, completion: @escaping (Error?) -> Void) {
+        Firestore.firestore()
+            .collection("rooms")
+            .document(roomCode)
+            .collection("players")
+            .document(playerID)
+            .delete(completion: completion)
+    }
+    
+    // MARK: - Helper: Generate Room Code
+    private func generateRoomCode() -> String {
+        let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        return String((0..<6).map { _ in letters.randomElement()! })
+    }
+    
+    // MARK: - Get Room Info
+    func getRoomInfo(code: String, completion: @escaping (Result<[String: Any], Error>) -> Void) {
+        Firestore.firestore()
+            .collection("rooms")
+            .document(code)
+            .getDocument { snapshot, error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+                
+                guard let data = snapshot?.data() else {
+                    let error = NSError(domain: "RoomManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "Room not found"])
+                    completion(.failure(error))
+                    return
+                }
+                
+                completion(.success(data))
+            }
+    }
+    
+    // MARK: - Update Player Status
+    func updatePlayerStatus(roomCode: String, playerID: String, status: [String: Any], completion: @escaping (Error?) -> Void) {
+        Firestore.firestore()
+            .collection("rooms")
+            .document(roomCode)
+            .collection("players")
+            .document(playerID)
+            .setData(status, merge: true, completion: completion)
     }
 }
