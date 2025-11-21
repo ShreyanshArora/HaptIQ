@@ -185,7 +185,6 @@ final class TapGuessViewController: UIViewController {
 
     // MARK: Result Evaluation
     private func evaluateResults(_ guesses: [[String: Any]]) {
-
         var imposterID = ""
         for (id, role) in RoomManager.shared.cachedRoles {
             if role == "imposter" { imposterID = id }
@@ -206,13 +205,12 @@ final class TapGuessViewController: UIViewController {
             }
         }
 
-        // Clear guesses for next round
         clearGuesses()
 
-        // 🎯 NEW LOGIC: Handle results based on who was wrong
+        // 🎯 CORRECT GAME LOGIC:
         
+        // Case 1: Imposter guessed WRONG → Always go to voting
         if imposterWrong {
-            // Imposter guessed wrong → Go to voting
             DispatchQueue.main.async {
                 let vc = VotingViewController(
                     roomCode: self.roomCode,
@@ -223,29 +221,86 @@ final class TapGuessViewController: UIViewController {
             }
             return
         }
-
+        
+        // Case 2: Imposter guessed CORRECT, but crewmate(s) wrong
         if !crewmatesWrong.isEmpty {
-            // Crewmate(s) guessed wrong → They're eliminated, go to spectator
-            let myID = RoomManager.shared.currentUserID
-            if crewmatesWrong.contains(myID) {
-                // I was wrong, I'm eliminated
+            let maxRounds = getMaxRounds()
+            
+            // Check if this is the last round
+            if currentRound >= maxRounds {
+                // Last round + imposter correct → IMPOSTER WINS
                 DispatchQueue.main.async {
-                    self.navigationController?.pushViewController(
-                        SpectatorViewController(),
-                        animated: true
+                    let vc = GameResultViewController(
+                        crewmatesWon: false,  // Imposter won
+                        roomCode: self.roomCode
                     )
+                    self.navigationController?.pushViewController(vc, animated: true)
                 }
             } else {
-                // Someone else was wrong, continue game
-                checkRoundLimitOrContinue()
+                // Not last round - continue playing
+                let myID = RoomManager.shared.currentUserID
+                if crewmatesWrong.contains(myID) {
+                    // I guessed wrong - eliminated, go to spectator
+                    DispatchQueue.main.async {
+                        let vc = SpectatorViewController()
+                        self.navigationController?.pushViewController(vc, animated: true)
+                    }
+                } else {
+                    // I'm still in the game - continue to next round
+                    continueToNextRound()
+                }
             }
             return
         }
-
-        // Everyone guessed correctly (including imposter) → Check round limit
-        checkRoundLimitOrContinue()
+        
+        // Case 3: Everyone correct (including imposter) → Continue or vote
+        let maxRounds = getMaxRounds()
+        
+        if currentRound >= maxRounds {
+            // Last round + everyone correct → Go to voting
+            DispatchQueue.main.async {
+                let vc = VotingViewController(
+                    roomCode: self.roomCode,
+                    players: self.players,
+                    currentRound: self.currentRound
+                )
+                self.navigationController?.pushViewController(vc, animated: true)
+            }
+        } else {
+            // Not last round - continue
+            continueToNextRound()
+        }
     }
-    
+
+    // Helper method to reduce code duplication
+    private func continueToNextRound() {
+        let nextR = Int.random(in: 2...5)
+        DispatchQueue.main.async {
+            let vc = HapticsRoomViewController(
+                roomCode: self.roomCode,
+                players: self.players,
+                rumbleCount: nextR,
+                role: self.myRole
+            )
+            vc.currentRound = self.currentRound + 1
+            self.navigationController?.pushViewController(vc, animated: true)
+        }
+    }
+    // Helper method to reduce code duplication
+//    private func continueToNextRound() {
+//        let nextR = Int.random(in: 2...5)
+//        DispatchQueue.main.async {
+//            let vc = HapticsRoomViewController(
+//                roomCode: self.roomCode,
+//                players: self.players,
+//                rumbleCount: nextR,
+//                role: self.myRole
+//            )
+//            vc.currentRound = self.currentRound + 1
+//            self.navigationController?.pushViewController(vc, animated: true)
+//        }
+//    }
+//    
     private func checkRoundLimitOrContinue() {
         let maxRounds = getMaxRounds()
         

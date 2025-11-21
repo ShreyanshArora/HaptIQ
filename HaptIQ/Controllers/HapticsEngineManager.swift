@@ -37,22 +37,27 @@ final class HapticsEngineManager {
     /// Each rumble is strong and separated by a noticeable pause
     /// Players can easily count: "1... 2... 3..."
     func playCountableRumble(count: Int) {
-        guard let engine = engine else {
-            print("❌ Engine not ready")
-            return
-        }
-
         guard count >= 2 && count <= 5 else {
             print("⚠️ Count must be 2-5")
             return
         }
+        
+        // 🔥 CRITICAL: Ensure engine is running
+        guard let engine = engine else {
+            print("❌ Engine not ready")
+            prepareEngine() // Try to restart
+            return
+        }
+        
+        // Check if engine is running, restart if needed
+        do {
+            try engine.start()
+        } catch {
+            print("⚠️ Engine restart failed:", error)
+            return
+        }
 
         var events: [CHHapticEvent] = []
-        
-        // Pattern timing:
-        // - Each rumble: 0.4 seconds (strong, noticeable)
-        // - Pause between: 0.6 seconds (clear gap for counting)
-        // Total for 5 rumbles: 5 × (0.4 + 0.6) = 5 seconds
         
         let rumbleDuration: TimeInterval = 0.4
         let pauseBetweenRumbles: TimeInterval = 0.6
@@ -60,15 +65,14 @@ final class HapticsEngineManager {
         for i in 0..<count {
             let startTime = Double(i) * (rumbleDuration + pauseBetweenRumbles)
             
-            // Create intense, sharp rumble that's easy to feel
             let intensity = CHHapticEventParameter(
                 parameterID: .hapticIntensity,
-                value: 1.0  // Maximum power
+                value: 1.0
             )
             
             let sharpness = CHHapticEventParameter(
                 parameterID: .hapticSharpness,
-                value: 0.8  // Sharp and distinct
+                value: 0.8
             )
             
             let event = CHHapticEvent(
@@ -86,11 +90,15 @@ final class HapticsEngineManager {
             let player = try engine.makePlayer(with: pattern)
             try player.start(atTime: 0)
             print("🔥 Playing \(count) countable rumbles")
+            
+            // 🔥 NEW: Verify pattern duration
+            let totalDuration = Double(count) * (rumbleDuration + pauseBetweenRumbles)
+            print("✅ Pattern duration: \(totalDuration)s for \(count) rumbles")
+            
         } catch {
             print("❌ Countable rumble error:", error)
         }
     }
-
     // MARK: - ⚡️ Alternative: Faster Pattern (Optional)
     /// Faster version with shorter intervals
     /// Use this if 15 seconds feels too long
