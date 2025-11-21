@@ -129,6 +129,10 @@ class EnterNameViewController: UIViewController {
             return
         }
 
+        // Get selected avatar from UserDefaults
+        let avatarImage = UserDefaults.standard.string(forKey: "selectedAvatarImage") ?? "char1"
+        let avatarTitle = UserDefaults.standard.string(forKey: "selectedAvatarTitle") ?? "Shadow Hacker"
+
         if isCreator {
             // creator should update their existing host player doc
             let hostID = RoomManager.shared.currentUserID
@@ -137,7 +141,12 @@ class EnterNameViewController: UIViewController {
                 .document(roomCode)
                 .collection("players")
                 .document(hostID)
-                .setData(["name": name, "isHost": true], merge: true) { _ in
+                .setData([
+                    "name": name,
+                    "isHost": true,
+                    "avatarImage": avatarImage,
+                    "avatarTitle": avatarTitle
+                ], merge: true) { _ in
                     self.goToLobby()
                 }
             return
@@ -146,9 +155,21 @@ class EnterNameViewController: UIViewController {
         // joiner: create new player doc & update currentUserID
         let uid = UUID().uuidString
         RoomManager.shared.currentUserID = uid
-        RoomManager.shared.addPlayer(id: uid, name: name, isHost: false, to: roomCode) { _ in
-            self.goToLobby()
-        }
+        
+        // Updated addPlayer call with avatar data
+        Firestore.firestore()
+            .collection("rooms")
+            .document(roomCode)
+            .collection("players")
+            .document(uid)
+            .setData([
+                "name": name,
+                "isHost": false,
+                "avatarImage": avatarImage,
+                "avatarTitle": avatarTitle
+            ]) { _ in
+                self.goToLobby()
+            }
     }
 
     private func goToLobby() {

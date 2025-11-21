@@ -201,7 +201,7 @@ class RoomCodeEntry: UIViewController {
         }
 
         // Validate room code with RoomManager
-        RoomManager.shared.joinRoom(withCode: code) { [weak self] result in
+        RoomManager.shared.joinRoom(code: code) { [weak self] result in
             DispatchQueue.main.async {
                 switch result {
                 case .success:
