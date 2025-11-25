@@ -1,15 +1,15 @@
 import UIKit
-// testing commit by anuj
+
 final class AvatarSelectionController: UIPageViewController {
 
-    // MARK: - Data
+    // MARK: - Data with separate images for selection and lobby
     private let pages: [AvatarPage] = [
-        AvatarPage(imageName: "char1", title: "Shadow Hacker"),
-        AvatarPage(imageName: "char2", title: "Cyber Tank"),
-        AvatarPage(imageName: "char3", title: "Blade Dancer"),
-        AvatarPage(imageName: "char4", title: "Tech Genius"),
-        AvatarPage(imageName: "char5", title: "Stealth Ninja"),
-        AvatarPage(imageName: "char6", title: "Mecha Beast")
+        AvatarPage(lobbyImageName: "char1_lobby", imageName: "char1", title: "Shadow Hacker"),
+        AvatarPage(lobbyImageName: "char2_lobby", imageName: "char2", title: "Cyber Tank"),
+        AvatarPage(lobbyImageName: "char3_lobby", imageName: "char3", title: "Blade Dancer"),
+        AvatarPage(lobbyImageName: "char4_lobby", imageName: "char4", title: "Tech Genius"),
+        AvatarPage(lobbyImageName: "char5_lobby", imageName: "char5", title: "Stealth Ninja"),
+        AvatarPage(lobbyImageName: "char6_lobby", imageName: "char6", title: "Mecha Beast")
     ]
 
     private lazy var controllers: [AvatarPageVC] = pages.map { AvatarPageVC(page: $0) }
@@ -91,13 +91,11 @@ final class AvatarSelectionController: UIPageViewController {
 
     // MARK: - Decorative Images
     private func setupDecorativeImages() {
-        // Configure left image
         leftDecorImageView.translatesAutoresizingMaskIntoConstraints = false
         leftDecorImageView.image = UIImage(named: "square")
         leftDecorImageView.contentMode = .scaleAspectFit
         leftDecorImageView.alpha = 1
         
-        // Configure right image
         rightDecorImageView.translatesAutoresizingMaskIntoConstraints = false
         rightDecorImageView.image = UIImage(named: "square1")
         rightDecorImageView.contentMode = .scaleAspectFit
@@ -107,13 +105,11 @@ final class AvatarSelectionController: UIPageViewController {
         view.addSubview(rightDecorImageView)
         
         NSLayoutConstraint.activate([
-            // Left cube at extreme left edge, vertically centered
             leftDecorImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: -25),
             leftDecorImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             leftDecorImageView.widthAnchor.constraint(equalToConstant: 90),
             leftDecorImageView.heightAnchor.constraint(equalToConstant: 90),
             
-            // Right cube at extreme right edge, slightly below center
             rightDecorImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 25),
             rightDecorImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 80),
             rightDecorImageView.widthAnchor.constraint(equalToConstant: 90),
@@ -137,45 +133,37 @@ final class AvatarSelectionController: UIPageViewController {
 
     // MARK: - Buttons
     private func setupButtons() {
-        // Configure buttons first
         leftButton.translatesAutoresizingMaskIntoConstraints = false
         rightButton.translatesAutoresizingMaskIntoConstraints = false
         continueButton.translatesAutoresizingMaskIntoConstraints = false
 
-        // Left arrow
         leftButton.setTitle("‹", for: .normal)
         leftButton.titleLabel?.font = UIFont.systemFont(ofSize: 34, weight: .bold)
         leftButton.tintColor = .white
         leftButton.addTarget(self, action: #selector(goPrevious), for: .touchUpInside)
 
-        // Right arrow
         rightButton.setTitle("›", for: .normal)
         rightButton.titleLabel?.font = UIFont.systemFont(ofSize: 34, weight: .bold)
         rightButton.tintColor = .white
         rightButton.addTarget(self, action: #selector(goNext), for: .touchUpInside)
 
-        // Continue button
         continueButton.setTitle("Continue", for: .normal)
         continueButton.setTitleColor(.white, for: .normal)
         continueButton.backgroundColor = UIColor(red: 0.10, green: 0.45, blue: 1.0, alpha: 1)
         continueButton.layer.cornerRadius = 20
         continueButton.addTarget(self, action: #selector(continueTapped), for: .touchUpInside)
 
-        // Add to view hierarchy
         view.addSubview(leftButton)
         view.addSubview(rightButton)
         view.addSubview(continueButton)
 
-        // Activate constraints AFTER adding to view
         NSLayoutConstraint.activate([
-            // Left and right buttons at vertical center of the screen
             leftButton.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             leftButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
 
             rightButton.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             rightButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
 
-            // Continue button above the page control
             continueButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             continueButton.bottomAnchor.constraint(equalTo: pageControl.topAnchor, constant: -20),
             continueButton.widthAnchor.constraint(equalToConstant: 220),
@@ -208,8 +196,8 @@ final class AvatarSelectionController: UIPageViewController {
         let idx = currentIndex()
         let selectedAvatar = pages[idx]
         
-        // Save the selected avatar to UserDefaults (for future use if needed)
-        UserDefaults.standard.set(selectedAvatar.imageName, forKey: "selectedAvatarImage")
+        // Save LOBBY image name to UserDefaults (this will be shown in room lobby)
+        UserDefaults.standard.set(selectedAvatar.lobbyImageName, forKey: "selectedAvatarImage")
         UserDefaults.standard.set(selectedAvatar.title, forKey: "selectedAvatarTitle")
         
         // Navigate to the next screen
@@ -226,7 +214,6 @@ extension AvatarSelectionController: UIPageViewControllerDataSource {
         guard let current = vc as? AvatarPageVC,
               let idx = controllers.firstIndex(of: current) else { return nil }
         
-        // Wrap around: if at first page, go to last
         if idx == 0 {
             return controllers[controllers.count - 1]
         }
@@ -238,7 +225,6 @@ extension AvatarSelectionController: UIPageViewControllerDataSource {
         guard let current = vc as? AvatarPageVC,
               let idx = controllers.firstIndex(of: current) else { return nil }
         
-        // Wrap around: if at last page, go to first
         if idx == controllers.count - 1 {
             return controllers[0]
         }

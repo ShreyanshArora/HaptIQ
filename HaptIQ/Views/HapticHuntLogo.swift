@@ -36,9 +36,7 @@ class HapticHuntLogo: UIViewController {
         gradientLayer.locations = [0, 1]
         gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
         gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
-        
         view.layer.insertSublayer(gradientLayer, at: 0)
-        
         // Rounded screen corners
         view.layer.cornerRadius = 40
         view.layer.masksToBounds = true

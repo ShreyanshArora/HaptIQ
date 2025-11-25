@@ -7,6 +7,7 @@
 import Foundation
 
 struct AvatarPage {
+    let lobbyImageName: String
     let imageName: String
     let title: String
 }
