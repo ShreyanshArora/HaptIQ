@@ -24,7 +24,7 @@ class OnboardingController: UIPageViewController,
     }()
     
     
-    // MARK: - PageControl (the dots)
+    // MARK: - PageControl (dots)
     private let pageControl: UIPageControl = {
         let pc = UIPageControl()
         pc.numberOfPages = 4
@@ -33,6 +33,16 @@ class OnboardingController: UIPageViewController,
         pc.pageIndicatorTintColor = UIColor(white: 0.6, alpha: 1.0)
         pc.translatesAutoresizingMaskIntoConstraints = false
         return pc
+    }()
+    
+    // MARK: - Skip button
+    private let skipButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setTitle("Skip", for: .normal)
+        btn.setTitleColor(.white, for: .normal)
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        return btn
     }()
     
     
@@ -45,10 +55,11 @@ class OnboardingController: UIPageViewController,
         setViewControllers([controllers[0]], direction: .forward, animated: true)
         
         setupPageControl()
+        setupSkipButton()
     }
     
     
-    // MARK: - Add PageControl
+    // MARK: - Setup PageControl
     private func setupPageControl() {
         view.addSubview(pageControl)
         
@@ -56,6 +67,24 @@ class OnboardingController: UIPageViewController,
             pageControl.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
             pageControl.centerXAnchor.constraint(equalTo: view.centerXAnchor)
         ])
+    }
+    
+    // MARK: - Setup Skip Button
+    private func setupSkipButton() {
+        view.addSubview(skipButton)
+        skipButton.addTarget(self, action: #selector(skipTapped), for: .touchUpInside)
+        
+        NSLayoutConstraint.activate([
+            skipButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            skipButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+        ])
+    }
+    
+    
+    // MARK: - Skip Action
+    @objc private func skipTapped() {
+        let vc = AvatarSelectionController()
+        navigationController?.setViewControllers([vc], animated: true)
     }
     
     
@@ -76,7 +105,7 @@ class OnboardingController: UIPageViewController,
         
         guard let index = controllers.firstIndex(of: viewController) else { return nil }
         
-        // If last page → go to JoinRoomViewController
+        // If last page → move to next screen
         if index == controllers.count - 1 {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 let vc = AvatarSelectionController()
@@ -88,12 +117,12 @@ class OnboardingController: UIPageViewController,
         return controllers[index + 1]
     }
     
-    // MARK: - Update dots on swipe
+    // MARK: - Update dots
     func pageViewController(_ pageViewController: UIPageViewController,
                             didFinishAnimating finished: Bool,
                             previousViewControllers: [UIViewController],
                             transitionCompleted completed: Bool) {
-
+        
         if completed,
            let visibleVC = pageViewController.viewControllers?.first,
            let index = controllers.firstIndex(of: visibleVC) {
