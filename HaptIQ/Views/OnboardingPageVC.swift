@@ -47,7 +47,7 @@ class OnboardingPageVC: UIViewController {
             imgView.topAnchor.constraint(equalTo: view.topAnchor),          
             imgView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             imgView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            imgView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.55),
+            imgView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.65),
 
             // LABEL AT BOTTOM
             label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
