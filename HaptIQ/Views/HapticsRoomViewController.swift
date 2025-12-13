@@ -10,10 +10,10 @@ final class HapticsRoomViewController: UIViewController {
 
     // MARK: - Public game inputs
     var roomCode: String
-    var rumbleCount: Int = 0            // updated from Firestore
+    var rumbleCount: Int = 0
     var players: [RoomManager.Player] = []
     var role: PlayerRole
-    var currentRound: Int = 1  // NEW: Track round number
+    var currentRound: Int = 1
 
     enum PlayerRole { case crewmate, imposter }
 
@@ -24,9 +24,18 @@ final class HapticsRoomViewController: UIViewController {
     private var inRound = false
     private var stateListener: ListenerRegistration?
 
+    // MARK: - PNG Animation
+    private let pngAnimationView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
+    }()
+
     // MARK: UI
     private let bgImage: UIImageView = {
-        let iv = UIImageView(image: UIImage(named: "bghex"))
+        let iv = UIImageView(image: UIImage(named: "gScreen"))
         iv.contentMode = .scaleAspectFill
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
@@ -44,7 +53,8 @@ final class HapticsRoomViewController: UIViewController {
 
     private let roleLabel: UILabel = {
         let l = UILabel()
-        l.font = UIFont(name: "Aclonica-Regular", size: 40)
+        l.text = "Haptic Round"
+        l.font = UIFont(name: "Aclonica-Regular", size: 32)
         l.textColor = .white
         l.textAlignment = .center
         l.translatesAutoresizingMaskIntoConstraints = false
@@ -53,8 +63,9 @@ final class HapticsRoomViewController: UIViewController {
 
     private let statusLabel: UILabel = {
         let l = UILabel()
-        l.font = UIFont(name: "Aclonica-Regular", size: 24)
-        l.textColor = UIColor.white.withAlphaComponent(0.9)
+        l.text = "Feel the pulses. Stay quiet."
+        l.font = UIFont(name: "Aclonica-Regular", size: 16)
+        l.textColor = UIColor.white.withAlphaComponent(0.7)
         l.textAlignment = .center
         l.numberOfLines = 3
         l.translatesAutoresizingMaskIntoConstraints = false
@@ -63,8 +74,8 @@ final class HapticsRoomViewController: UIViewController {
 
     private let timerLabel: UILabel = {
         let l = UILabel()
-        l.font = UIFont(name: "Aclonica-Regular", size: 58)
-        l.textColor = .yellow
+        l.font = UIFont(name: "Aclonica-Regular", size: 56)
+        l.textColor = .white
         l.translatesAutoresizingMaskIntoConstraints = false
         l.textAlignment = .center
         return l
@@ -104,21 +115,51 @@ final class HapticsRoomViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         layoutUI()
+        setupPNGAnimation()
         continueButton.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
-        addBackButton()
         startHapticsRound()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        timer?.invalidate()  // Stop timer when leaving screen
+        timer?.invalidate()
+    }
+
+    // MARK: - PNG Animation Setup
+    private func setupPNGAnimation() {
+        guard let frame1 = UIImage(named: "haptic1"),
+              let frame2Original = UIImage(named: "haptic2") else {
+            print("⚠️ haptic1.png or haptic2.png not found")
+            return
+        }
+        
+        // Shift haptic2 image upward to align centers
+        let frame2 = shiftImageUp(frame2Original, by: 25)
+        
+        pngAnimationView.animationImages = [frame1, frame2]
+        pngAnimationView.animationDuration = 1.3 // 0.9 seconds total (0.45 sec per frame)
+        pngAnimationView.animationRepeatCount = 0 // Loop forever
+        pngAnimationView.startAnimating()
+    }
+    
+    private func shiftImageUp(_ image: UIImage, by offset: CGFloat) -> UIImage {
+        let newSize = image.size
+        UIGraphicsBeginImageContextWithOptions(newSize, false, image.scale)
+        
+        // Draw the image shifted up
+        image.draw(at: CGPoint(x: 0, y: -offset))
+        
+        let shiftedImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return shiftedImage ?? image
     }
 
     // MARK: UI
     private func layoutUI() {
         view.addSubview(bgImage)
-        view.addSubview(roleCard)
-        roleCard.addSubview(roleLabel)
+        view.addSubview(pngAnimationView) // Full screen PNG animation
+        view.addSubview(roleLabel)
         view.addSubview(statusLabel)
         view.addSubview(timerLabel)
         view.addSubview(continueButton)
@@ -129,20 +170,21 @@ final class HapticsRoomViewController: UIViewController {
             bgImage.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bgImage.trailingAnchor.constraint(equalTo: view.trailingAnchor),
 
-            roleCard.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 50),
-            roleCard.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            roleCard.widthAnchor.constraint(equalToConstant: 250),
-            roleCard.heightAnchor.constraint(equalToConstant: 70),
+            // PNG Animation - Full screen AspectFill
+            pngAnimationView.topAnchor.constraint(equalTo: view.topAnchor),
+            pngAnimationView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            pngAnimationView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            pngAnimationView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
 
-            roleLabel.centerXAnchor.constraint(equalTo: roleCard.centerXAnchor),
-            roleLabel.centerYAnchor.constraint(equalTo: roleCard.centerYAnchor),
+            roleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
+            roleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
 
-            statusLabel.topAnchor.constraint(equalTo: roleCard.bottomAnchor, constant: 25),
+            statusLabel.topAnchor.constraint(equalTo: roleLabel.bottomAnchor, constant: 8),
             statusLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 25),
             statusLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -25),
 
             timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            timerLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            timerLabel.bottomAnchor.constraint(equalTo: continueButton.topAnchor, constant: -20),
 
             continueButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
             continueButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -151,46 +193,44 @@ final class HapticsRoomViewController: UIViewController {
         ])
     }
 
-    @objc private func onBack() { navigationController?.popViewController(animated: true) }
+    
+
+    @objc private func onBack() {
+        navigationController?.popViewController(animated: true)
+    }
 
     // MARK: - GAME ROUND
 
     private func startHapticsRound() {
         secondsLeft = 10
-        timerLabel.text = "\(secondsLeft)"
-
-        // 🎭 Everyone sees the same screen - no role revealed
-        roleLabel.text = "STAY SILENT"
-        statusLabel.text = "Count the haptics carefully..."
+        updateTimerDisplay()
 
         if role == .crewmate {
-            // Crewmate gets the actual haptics
             sentRumbles = rumbleCount
             
-            // 🔥 NEW: Use countable rumble pattern with delay
-            // Wait 2 seconds before starting the pattern so users are ready
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 HapticsEngineManager.shared.playCountableRumble(count: self.rumbleCount)
             }
             
         } else {
-            // Imposter gets NOTHING but sees same screen
             sentRumbles = 0
-            // No haptics played - they must pretend!
         }
 
         startRoundTimer()
     }
-
-    // ❌ REMOVED: Old scheduleRumbles method - no longer needed
-    // The new playCountableRumble handles all timing internally
+    
+    private func updateTimerDisplay() {
+        let minutes = secondsLeft / 60
+        let seconds = secondsLeft % 60
+        timerLabel.text = String(format: "%02d:%02d", minutes, seconds)
+    }
 
     private func startRoundTimer() {
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let s = self else { return }
             s.secondsLeft -= 1
-            s.timerLabel.text = "\(s.secondsLeft)"
+            s.updateTimerDisplay()
             
             if s.secondsLeft <= 0 {
                 s.timer?.invalidate()
@@ -200,7 +240,6 @@ final class HapticsRoomViewController: UIViewController {
     }
 
     private func finishRound() {
-        statusLabel.text = "Time's up!"
         continueButton.isHidden = false
     }
 

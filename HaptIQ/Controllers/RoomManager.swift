@@ -151,8 +151,8 @@ final class RoomManager {
     
     // MARK: - Host Assign Roles and Start Round
     func hostAssignRolesAndStartRound(roomCode: String, players: [Player], completion: @escaping (Error?) -> Void) {
-        guard players.count >= 3 else {
-            let error = NSError(domain: "RoomManager", code: 400, userInfo: [NSLocalizedDescriptionKey: "Need at least 3 players"])
+        guard players.count >= 1 else {
+            let error = NSError(domain: "RoomManager", code: 400, userInfo: [NSLocalizedDescriptionKey: "Need at least 2 players"])
             completion(error)
             return
         }
