@@ -84,7 +84,8 @@ final class HapticsRoomViewController: UIViewController {
 
     private let continueButton: UIButton = {
         let b = UIButton(type: .system)
-        b.setTitle("CONTINUE", for: .normal)
+        b.setTitle("Continue", for: .normal)
+        b.titleLabel?.font = UIFont(name: "Aclonica-Regular", size: 20)
         b.backgroundColor = UIColor(red: 21/255, green: 174/255, blue: 21/255, alpha: 1)
         b.setTitleColor(.white, for: .normal)
         b.layer.cornerRadius = 22

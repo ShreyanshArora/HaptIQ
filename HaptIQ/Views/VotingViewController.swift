@@ -144,7 +144,7 @@ final class VotingViewController: UIViewController {
     // UI Components
     private let titleLabel: UILabel = {
         let l = UILabel()
-        l.text = "Who is the Imposter?"
+        l.text = "Time to Vote"
         l.textColor = .white
         l.font = UIFont(name: "Aclonica-Regular", size: 32)
         l.textAlignment = .center
