@@ -1,8 +1,3 @@
-//
-//  TapGuessViewController.swift
-//  HaptIQ
-//
-
 import UIKit
 import FirebaseFirestore
 
@@ -13,6 +8,7 @@ final class TapGuessViewController: UIViewController {
     private let myRole: HapticsRoomViewController.PlayerRole
     private var players: [RoomManager.Player]
     private var currentRound: Int
+    private let selectedAvatar: AvatarPage? // 🆕 Store selected avatar
 
     private var myTapCount = 0
     private let db = Firestore.firestore()
@@ -21,10 +17,31 @@ final class TapGuessViewController: UIViewController {
 
     // UI
     private let bgImage: UIImageView = {
-        let iv = UIImageView(image: UIImage(named: "bghex"))
+        let iv = UIImageView(image: UIImage(named: "tapScreenBg"))
         iv.contentMode = .scaleAspectFill
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
+    }()
+    
+    private let titleLabel: UILabel = {
+        let l = UILabel()
+        l.text = "Tap Round"
+        l.font = UIFont(name: "Aclonica-Regular", size: 36)
+        l.textColor = .white
+        l.textAlignment = .center
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
+    }()
+    
+    private let subtitleLabel: UILabel = {
+        let l = UILabel()
+        l.text = "Trust your touch, tap every haptics you feel"
+        l.font = UIFont(name: "Aclonica-Regular", size: 14)
+        l.textColor = UIColor.white.withAlphaComponent(0.8)
+        l.textAlignment = .center
+        l.numberOfLines = 0
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
     }()
     
     private let roundLabel: UILabel = {
@@ -36,42 +53,95 @@ final class TapGuessViewController: UIViewController {
         return l
     }()
 
+    // Concentric circles container
+    private let circlesContainer: UIView = {
+        let v = UIView()
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
+    }()
+    
+    // Profile image in center
+    private let profileImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.layer.cornerRadius = 60
+        iv.layer.borderWidth = 3
+        iv.layer.borderColor = UIColor.cyan.cgColor
+        iv.clipsToBounds = true
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        // Set default profile image or user's profile
+        iv.image = UIImage(named: "defaultProfile") ?? UIImage(systemName: "person.circle.fill")
+        iv.tintColor = .white
+        return iv
+    }()
+    
+    // Counter controls
+    private let counterContainer: UIView = {
+        let v = UIView()
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
+    }()
+    
+    private let decrementButton: UIButton = {
+        let b = UIButton(type: .system)
+        b.setTitle("−", for: .normal)
+        b.titleLabel?.font = UIFont.systemFont(ofSize: 40, weight: .light)
+        b.setTitleColor(.white, for: .normal)
+        b.backgroundColor = UIColor.white.withAlphaComponent(0.1)
+        b.layer.cornerRadius = 30
+        b.layer.borderWidth = 1
+        b.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        b.translatesAutoresizingMaskIntoConstraints = false
+        return b
+    }()
+    
     private let counterLabel: UILabel = {
         let l = UILabel()
         l.text = "0"
-        l.font = UIFont(name: "Aclonica-Regular", size: 80)
+        l.font = UIFont(name: "Aclonica-Regular", size: 48)
         l.textColor = .white
+        l.textAlignment = .center
         l.translatesAutoresizingMaskIntoConstraints = false
         return l
     }()
-
-    private let tapArea: UIView = {
-        let v = UIView()
-        v.backgroundColor = UIColor.white.withAlphaComponent(0.06)
-        v.layer.cornerRadius = 25
-        v.layer.borderWidth = 2
-        v.layer.borderColor = UIColor.white.withAlphaComponent(0.20).cgColor
-        v.translatesAutoresizingMaskIntoConstraints = false
-        return v
+    
+    private let incrementButton: UIButton = {
+        let b = UIButton(type: .system)
+        b.setTitle("+", for: .normal)
+        b.titleLabel?.font = UIFont.systemFont(ofSize: 40, weight: .light)
+        b.setTitleColor(.white, for: .normal)
+        b.backgroundColor = UIColor.white.withAlphaComponent(0.1)
+        b.layer.cornerRadius = 30
+        b.layer.borderWidth = 1
+        b.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        b.translatesAutoresizingMaskIntoConstraints = false
+        return b
     }()
 
     private let submitButton: UIButton = {
         let b = UIButton(type: .system)
-        b.setTitle("SUBMIT", for: .normal)
+        b.setTitle("Next", for: .normal)
+        b.titleLabel?.font = UIFont(name: "Aclonica-Regular", size: 22)
         b.backgroundColor = UIColor(red: 21/255, green: 174/255, blue: 21/255, alpha: 1)
         b.setTitleColor(.white, for: .normal)
-        b.layer.cornerRadius = 20
+        b.layer.cornerRadius = 27.5
         b.translatesAutoresizingMaskIntoConstraints = false
         return b
     }()
 
     // MARK: - Init
-    init(roomCode: String, rumbleCount: Int, myRole: HapticsRoomViewController.PlayerRole, players: [RoomManager.Player], currentRound: Int = 1) {
+    init(roomCode: String,
+         rumbleCount: Int,
+         myRole: HapticsRoomViewController.PlayerRole,
+         players: [RoomManager.Player],
+         currentRound: Int = 1,
+         selectedAvatar: AvatarPage? = nil) { // 🆕 Add avatar parameter
         self.roomCode = roomCode
         self.rumbleCount = rumbleCount
         self.myRole = myRole
         self.players = players
         self.currentRound = currentRound
+        self.selectedAvatar = selectedAvatar
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) { fatalError("not allowed") }
@@ -83,22 +153,98 @@ final class TapGuessViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Debug: Check if avatar was passed
+        if let avatar = selectedAvatar {
+            print("🎨 Avatar passed to TapGuessViewController: \(avatar.title)")
+            print("   - lobbyImageName: \(avatar.lobbyImageName)")
+            print("   - imageName: \(avatar.imageName)")
+        } else {
+            print("⚠️ NO avatar passed to TapGuessViewController")
+        }
+        
         layoutUI()
         updateRoundLabel()
-        addBackButton()
-        setupTapGesture()
-        submitButton.addTarget(self, action: #selector(submitTapped), for: .touchUpInside)
+        setupButtonActions()
+        loadUserProfile()
         
         print("📱 TapGuessViewController loaded - Round \(currentRound), Players: \(players.count), Rumbles: \(rumbleCount)")
+    }
+    
+    private func loadUserProfile() {
+        // Use the selected avatar if available
+        if let avatar = selectedAvatar {
+            // Use imageName for the tap screen (the main avatar image)
+            if let avatarImage = UIImage(named: avatar.imageName) {
+                profileImageView.image = avatarImage
+                print("✅ Loaded avatar: \(avatar.title) - \(avatar.imageName)")
+            } else {
+                print("⚠️ Avatar image '\(avatar.imageName)' not found in assets")
+                // Try lobby image as fallback
+                if let lobbyImage = UIImage(named: avatar.lobbyImageName) {
+                    profileImageView.image = lobbyImage
+                    print("✅ Using lobby image instead: \(avatar.lobbyImageName)")
+                } else {
+                    print("❌ Neither avatar image found, using default")
+                    profileImageView.image = UIImage(named: "defaultProfile") ?? UIImage(systemName: "person.circle.fill")
+                }
+            }
+        } else {
+            // Fallback: Try to load from saved preferences
+            print("⚠️ No avatar passed to TapGuessViewController")
+            if let savedAvatarName = UserDefaults.standard.string(forKey: "selectedAvatar_\(RoomManager.shared.currentUserID)") {
+                if let savedImage = UIImage(named: savedAvatarName) {
+                    profileImageView.image = savedImage
+                    print("✅ Loaded saved avatar: \(savedAvatarName)")
+                } else {
+                    print("⚠️ Saved avatar '\(savedAvatarName)' not found")
+                    profileImageView.image = UIImage(named: "defaultProfile") ?? UIImage(systemName: "person.circle.fill")
+                }
+            } else {
+                // Ultimate fallback
+                print("⚠️ Using default profile image")
+                profileImageView.image = UIImage(named: "defaultProfile") ?? UIImage(systemName: "person.circle.fill")
+            }
+        }
+        
+        // Debug: Print what image is actually set
+        if profileImageView.image != nil {
+            print("✅ Profile image view has an image")
+        } else {
+            print("❌ Profile image view has NO image")
+        }
+    }
+    
+    private func setupButtonActions() {
+        incrementButton.addTarget(self, action: #selector(incrementTapped), for: .touchUpInside)
+        decrementButton.addTarget(self, action: #selector(decrementTapped), for: .touchUpInside)
+        submitButton.addTarget(self, action: #selector(submitTapped), for: .touchUpInside)
+        
+        // Add tap gesture to profile image area
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(profileTapped))
+        profileImageView.addGestureRecognizer(tapGesture)
+        profileImageView.isUserInteractionEnabled = true
     }
 
     // MARK: UI Layout
     private func layoutUI() {
         view.addSubview(bgImage)
-        view.addSubview(roundLabel)
-        view.addSubview(tapArea)
-        view.addSubview(counterLabel)
+        view.addSubview(titleLabel)
+        view.addSubview(subtitleLabel)
+        view.addSubview(circlesContainer)
+        view.addSubview(counterContainer)
         view.addSubview(submitButton)
+        
+        // Add concentric circles
+        createConcentricCircles()
+        
+        // Add profile to circles container
+        circlesContainer.addSubview(profileImageView)
+        
+        // Add counter controls
+        counterContainer.addSubview(decrementButton)
+        counterContainer.addSubview(counterLabel)
+        counterContainer.addSubview(incrementButton)
 
         NSLayoutConstraint.activate([
             bgImage.topAnchor.constraint(equalTo: view.topAnchor),
@@ -106,27 +252,56 @@ final class TapGuessViewController: UIViewController {
             bgImage.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bgImage.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             
-            roundLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            roundLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
+            titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            
+            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
+            subtitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
+            subtitleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40),
 
-            tapArea.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            tapArea.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            tapArea.widthAnchor.constraint(equalToConstant: 320),
-            tapArea.heightAnchor.constraint(equalToConstant: 320),
+            circlesContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            circlesContainer.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 40),
+            circlesContainer.widthAnchor.constraint(equalToConstant: 380),
+            circlesContainer.heightAnchor.constraint(equalToConstant: 380),
+            
+            profileImageView.centerXAnchor.constraint(equalTo: circlesContainer.centerXAnchor),
+            profileImageView.centerYAnchor.constraint(equalTo: circlesContainer.centerYAnchor),
+            profileImageView.widthAnchor.constraint(equalToConstant: 120),
+            profileImageView.heightAnchor.constraint(equalToConstant: 120),
+            
+            counterContainer.topAnchor.constraint(equalTo: circlesContainer.bottomAnchor, constant: 15),
+            counterContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            counterContainer.heightAnchor.constraint(equalToConstant: 60),
+            
+            decrementButton.leadingAnchor.constraint(equalTo: counterContainer.leadingAnchor),
+            decrementButton.centerYAnchor.constraint(equalTo: counterContainer.centerYAnchor),
+            decrementButton.widthAnchor.constraint(equalToConstant: 60),
+            decrementButton.heightAnchor.constraint(equalToConstant: 60),
+            
+            counterLabel.centerXAnchor.constraint(equalTo: counterContainer.centerXAnchor),
+            counterLabel.centerYAnchor.constraint(equalTo: counterContainer.centerYAnchor),
+            counterLabel.leadingAnchor.constraint(equalTo: decrementButton.trailingAnchor, constant: 30),
+            counterLabel.trailingAnchor.constraint(equalTo: incrementButton.leadingAnchor, constant: -30),
+            
+            incrementButton.trailingAnchor.constraint(equalTo: counterContainer.trailingAnchor),
+            incrementButton.centerYAnchor.constraint(equalTo: counterContainer.centerYAnchor),
+            incrementButton.widthAnchor.constraint(equalToConstant: 60),
+            incrementButton.heightAnchor.constraint(equalToConstant: 60),
 
-            counterLabel.centerXAnchor.constraint(equalTo: tapArea.centerXAnchor),
-            counterLabel.centerYAnchor.constraint(equalTo: tapArea.centerYAnchor),
-
-            submitButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
+            submitButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30),
             submitButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            submitButton.widthAnchor.constraint(equalToConstant: 220),
+            submitButton.widthAnchor.constraint(equalToConstant: 340),
             submitButton.heightAnchor.constraint(equalToConstant: 55)
         ])
     }
     
+    private func createConcentricCircles() {
+        // Circles removed - background image handles the visual design
+    }
+    
     private func updateRoundLabel() {
         let maxRounds = getMaxRounds()
-        roundLabel.text = "Round \(currentRound) / \(maxRounds)"
+        // Round label removed from main UI, can add back if needed
     }
     
     // MARK: - Game Rules
@@ -141,20 +316,52 @@ final class TapGuessViewController: UIViewController {
         }
     }
 
+    // MARK: - Button Actions
+    @objc private func incrementTapped() {
+        myTapCount += 1
+        updateCounter()
+        HapticsEngineManager.shared.playRumble()
+    }
+    
+    @objc private func decrementTapped() {
+        if myTapCount > 0 {
+            myTapCount -= 1
+            updateCounter()
+            HapticsEngineManager.shared.playRumble()
+        }
+    }
+    
+    @objc private func profileTapped() {
+        // Tapping profile also registers a haptic
+        myTapCount += 1
+        updateCounter()
+        HapticsEngineManager.shared.playRumble()
+        
+        // Add a subtle scale animation
+        UIView.animate(withDuration: 0.1, animations: {
+            self.profileImageView.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+        }) { _ in
+            UIView.animate(withDuration: 0.1) {
+                self.profileImageView.transform = .identity
+            }
+        }
+    }
+    
+    private func updateCounter() {
+        counterLabel.text = "\(myTapCount)"
+        
+        // Add bounce animation
+        UIView.animate(withDuration: 0.15, animations: {
+            self.counterLabel.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
+        }) { _ in
+            UIView.animate(withDuration: 0.15) {
+                self.counterLabel.transform = .identity
+            }
+        }
+    }
+
     @objc private func onBack() {
         navigationController?.popViewController(animated: true)
-    }
-
-    // MARK: Tap Logic
-    private func setupTapGesture() {
-        let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
-        tapArea.addGestureRecognizer(tap)
-    }
-
-    @objc private func handleTap() {
-        myTapCount += 1
-        counterLabel.text = "\(myTapCount)"
-        HapticsEngineManager.shared.playRumble()
     }
 
     // MARK: Submit
@@ -340,6 +547,12 @@ final class TapGuessViewController: UIViewController {
                 role: self.myRole
             )
             vc.currentRound = self.currentRound + 1
+            
+            // 🆕 Pass the selected avatar to next round
+            if let avatar = self.selectedAvatar {
+                vc.selectedAvatar = avatar
+            }
+            
             self.navigationController?.pushViewController(vc, animated: true)
         }
     }
