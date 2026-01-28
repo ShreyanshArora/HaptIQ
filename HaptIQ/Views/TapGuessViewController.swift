@@ -36,7 +36,7 @@ final class TapGuessViewController: UIViewController {
     private let subtitleLabel: UILabel = {
         let l = UILabel()
         l.text = "Trust your touch, tap every haptics you feel"
-        l.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        l.font = UIFont(name: "Aclonica-Regular", size: 14)
         l.textColor = UIColor.white.withAlphaComponent(0.8)
         l.textAlignment = .center
         l.numberOfLines = 0
@@ -269,7 +269,7 @@ final class TapGuessViewController: UIViewController {
             profileImageView.widthAnchor.constraint(equalToConstant: 120),
             profileImageView.heightAnchor.constraint(equalToConstant: 120),
             
-            counterContainer.topAnchor.constraint(equalTo: circlesContainer.bottomAnchor, constant: 40),
+            counterContainer.topAnchor.constraint(equalTo: circlesContainer.bottomAnchor, constant: 15),
             counterContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             counterContainer.heightAnchor.constraint(equalToConstant: 60),
             
