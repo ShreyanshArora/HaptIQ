@@ -8,12 +8,12 @@ final class TapGuessViewController: UIViewController {
     private let myRole: HapticsRoomViewController.PlayerRole
     private var players: [RoomManager.Player]
     private var currentRound: Int
-    private let selectedAvatar: AvatarPage? // 🆕 Store selected avatar
+    private let selectedAvatar: AvatarPage?
 
     private var myTapCount = 0
     private let db = Firestore.firestore()
     private var listener: ListenerRegistration?
-    private var hasProcessedResults = false  // 🔧 Prevent duplicate processing
+    private var hasProcessedResults = false
 
     // UI
     private let bgImage: UIImageView = {
@@ -43,15 +43,6 @@ final class TapGuessViewController: UIViewController {
         l.translatesAutoresizingMaskIntoConstraints = false
         return l
     }()
-    
-    private let roundLabel: UILabel = {
-        let l = UILabel()
-        l.font = UIFont(name: "Aclonica-Regular", size: 24)
-        l.textColor = .white
-        l.textAlignment = .center
-        l.translatesAutoresizingMaskIntoConstraints = false
-        return l
-    }()
 
     // Concentric circles container
     private let circlesContainer: UIView = {
@@ -69,7 +60,6 @@ final class TapGuessViewController: UIViewController {
         iv.layer.borderColor = UIColor.cyan.cgColor
         iv.clipsToBounds = true
         iv.translatesAutoresizingMaskIntoConstraints = false
-        // Set default profile image or user's profile
         iv.image = UIImage(named: "defaultProfile") ?? UIImage(systemName: "person.circle.fill")
         iv.tintColor = .white
         return iv
@@ -135,7 +125,7 @@ final class TapGuessViewController: UIViewController {
          myRole: HapticsRoomViewController.PlayerRole,
          players: [RoomManager.Player],
          currentRound: Int = 1,
-         selectedAvatar: AvatarPage? = nil) { // 🆕 Add avatar parameter
+         selectedAvatar: AvatarPage? = nil) {
         self.roomCode = roomCode
         self.rumbleCount = rumbleCount
         self.myRole = myRole
@@ -154,33 +144,37 @@ final class TapGuessViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Debug: Check if avatar was passed
         if let avatar = selectedAvatar {
             print("🎨 Avatar passed to TapGuessViewController: \(avatar.title)")
-            print("   - lobbyImageName: \(avatar.lobbyImageName)")
-            print("   - imageName: \(avatar.imageName)")
         } else {
             print("⚠️ NO avatar passed to TapGuessViewController")
         }
         
         layoutUI()
-        updateRoundLabel()
         setupButtonActions()
         loadUserProfile()
         
         print("📱 TapGuessViewController loaded - Round \(currentRound), Players: \(players.count), Rumbles: \(rumbleCount)")
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        print("📱 TapGuessViewController appeared")
+        print("   - Navigation stack: \(navigationController?.viewControllers.count ?? 0) controllers")
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        print("📱 TapGuessViewController will disappear")
+    }
+    
     private func loadUserProfile() {
-        // Use the selected avatar if available
         if let avatar = selectedAvatar {
-            // Use imageName for the tap screen (the main avatar image)
             if let avatarImage = UIImage(named: avatar.imageName) {
                 profileImageView.image = avatarImage
                 print("✅ Loaded avatar: \(avatar.title) - \(avatar.imageName)")
             } else {
                 print("⚠️ Avatar image '\(avatar.imageName)' not found in assets")
-                // Try lobby image as fallback
                 if let lobbyImage = UIImage(named: avatar.lobbyImageName) {
                     profileImageView.image = lobbyImage
                     print("✅ Using lobby image instead: \(avatar.lobbyImageName)")
@@ -190,7 +184,6 @@ final class TapGuessViewController: UIViewController {
                 }
             }
         } else {
-            // Fallback: Try to load from saved preferences
             print("⚠️ No avatar passed to TapGuessViewController")
             if let savedAvatarName = UserDefaults.standard.string(forKey: "selectedAvatar_\(RoomManager.shared.currentUserID)") {
                 if let savedImage = UIImage(named: savedAvatarName) {
@@ -201,13 +194,11 @@ final class TapGuessViewController: UIViewController {
                     profileImageView.image = UIImage(named: "defaultProfile") ?? UIImage(systemName: "person.circle.fill")
                 }
             } else {
-                // Ultimate fallback
                 print("⚠️ Using default profile image")
                 profileImageView.image = UIImage(named: "defaultProfile") ?? UIImage(systemName: "person.circle.fill")
             }
         }
         
-        // Debug: Print what image is actually set
         if profileImageView.image != nil {
             print("✅ Profile image view has an image")
         } else {
@@ -220,7 +211,6 @@ final class TapGuessViewController: UIViewController {
         decrementButton.addTarget(self, action: #selector(decrementTapped), for: .touchUpInside)
         submitButton.addTarget(self, action: #selector(submitTapped), for: .touchUpInside)
         
-        // Add tap gesture to profile image area
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(profileTapped))
         profileImageView.addGestureRecognizer(tapGesture)
         profileImageView.isUserInteractionEnabled = true
@@ -235,13 +225,8 @@ final class TapGuessViewController: UIViewController {
         view.addSubview(counterContainer)
         view.addSubview(submitButton)
         
-        // Add concentric circles
-        createConcentricCircles()
-        
-        // Add profile to circles container
         circlesContainer.addSubview(profileImageView)
         
-        // Add counter controls
         counterContainer.addSubview(decrementButton)
         counterContainer.addSubview(counterLabel)
         counterContainer.addSubview(incrementButton)
@@ -295,15 +280,6 @@ final class TapGuessViewController: UIViewController {
         ])
     }
     
-    private func createConcentricCircles() {
-        // Circles removed - background image handles the visual design
-    }
-    
-    private func updateRoundLabel() {
-        let maxRounds = getMaxRounds()
-        // Round label removed from main UI, can add back if needed
-    }
-    
     // MARK: - Game Rules
     private func getMaxRounds() -> Int {
         let playerCount = players.count
@@ -332,12 +308,10 @@ final class TapGuessViewController: UIViewController {
     }
     
     @objc private func profileTapped() {
-        // Tapping profile also registers a haptic
         myTapCount += 1
         updateCounter()
         HapticsEngineManager.shared.playRumble()
         
-        // Add a subtle scale animation
         UIView.animate(withDuration: 0.1, animations: {
             self.profileImageView.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
         }) { _ in
@@ -350,7 +324,6 @@ final class TapGuessViewController: UIViewController {
     private func updateCounter() {
         counterLabel.text = "\(myTapCount)"
         
-        // Add bounce animation
         UIView.animate(withDuration: 0.15, animations: {
             self.counterLabel.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
         }) { _ in
@@ -360,13 +333,14 @@ final class TapGuessViewController: UIViewController {
         }
     }
 
-    @objc private func onBack() {
-        navigationController?.popViewController(animated: true)
-    }
-
-    // MARK: Submit
+    // MARK: - Submit with Improved Error Handling
     @objc private func submitTapped() {
         let uid = RoomManager.shared.currentUserID
+        
+        print("🔵 SUBMIT TAPPED - User: \(uid.prefix(4))")
+        print("   - Tap Count: \(myTapCount)")
+        print("   - Expected Rumbles: \(rumbleCount)")
+        print("   - Total Players: \(players.count)")
 
         db.collection("rooms")
             .document(roomCode)
@@ -375,20 +349,34 @@ final class TapGuessViewController: UIViewController {
             .setData([
                 "tapCount": myTapCount,
                 "rumbleCount": rumbleCount,
-                "playerID": uid
-            ], merge: true)
-
-        print("✅ Submitted guess - Taps: \(myTapCount), Expected: \(rumbleCount)")
-        listenForResults()
-        submitButton.isEnabled = false
-        submitButton.alpha = 0.6
+                "playerID": uid,
+                "timestamp": FieldValue.serverTimestamp()
+            ], merge: true) { error in
+                if let error = error {
+                    print("❌ Submit error: \(error)")
+                    return
+                }
+                
+                print("✅ Successfully submitted guess to Firestore")
+                
+                DispatchQueue.main.async {
+                    self.listenForResults()
+                    self.submitButton.isEnabled = false
+                    self.submitButton.alpha = 0.6
+                    self.submitButton.setTitle("Waiting...", for: .normal)
+                }
+            }
     }
 
+    // MARK: - Improved Listen For Results
     private func listenForResults() {
         guard !hasProcessedResults else {
             print("⚠️ Already processed results, skipping listener")
             return
         }
+        
+        print("👂 Starting to listen for results...")
+        print("   - Expected players: \(players.count)")
         
         listener?.remove()
         listener = db.collection("rooms")
@@ -396,39 +384,67 @@ final class TapGuessViewController: UIViewController {
             .collection("guesses")
             .addSnapshotListener { [weak self] snap, error in
                 guard let self = self else { return }
-                guard !self.hasProcessedResults else {
-                    print("⚠️ Listener fired but already processed")
-                    return
-                }
                 
                 if let error = error {
                     print("❌ Listener error: \(error)")
                     return
                 }
                 
-                guard let docs = snap?.documents else { return }
+                guard let docs = snap?.documents else {
+                    print("⚠️ No documents in snapshot")
+                    return
+                }
                 
-                print("📊 Guesses received: \(docs.count)/\(self.players.count)")
+                let submittedPlayerIDs = Set(docs.compactMap { $0.data()["playerID"] as? String })
+                let expectedPlayerIDs = Set(self.players.map { $0.id })
                 
-                if docs.count >= self.players.count {
+                print("📊 Guess Status:")
+                print("   - Submitted: \(submittedPlayerIDs.count)/\(self.players.count)")
+                print("   - Submitted IDs: \(submittedPlayerIDs.map { $0.prefix(4) })")
+                print("   - Expected IDs: \(expectedPlayerIDs.map { $0.prefix(4) })")
+                print("   - Missing: \(expectedPlayerIDs.subtracting(submittedPlayerIDs).map { $0.prefix(4) })")
+                
+                let allPlayersSubmitted = submittedPlayerIDs.count >= self.players.count
+                
+                if allPlayersSubmitted && !self.hasProcessedResults {
+                    print("🎯 All players submitted! Processing results...")
                     self.hasProcessedResults = true
                     self.listener?.remove()
+                    
                     let results = docs.map { $0.data() }
-                    self.evaluateResults(results)
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self.evaluateResults(results)
+                    }
+                } else if !allPlayersSubmitted {
+                    print("⏳ Still waiting for \(self.players.count - submittedPlayerIDs.count) player(s)")
                 }
             }
     }
 
-    // MARK: Result Evaluation
+    // MARK: - Result Evaluation (FIXED VOTING LOGIC)
     private func evaluateResults(_ guesses: [[String: Any]]) {
         print("\n🎯 === EVALUATING ROUND \(currentRound) ===")
+        print("📊 Total guesses received: \(guesses.count)")
+        print("👥 Expected players: \(players.count)")
+        
+        guard guesses.count >= players.count else {
+            print("⚠️ WARNING: Not enough guesses (\(guesses.count)/\(players.count))")
+            return
+        }
         
         var imposterID = ""
         for (id, role) in RoomManager.shared.cachedRoles {
             if role == "imposter" {
                 imposterID = id
-                print("🎭 Imposter ID: \(id)")
+                print("🎭 Imposter ID: \(id.prefix(4))")
             }
+        }
+        
+        guard !imposterID.isEmpty else {
+            print("❌ ERROR: No imposter found in cached roles!")
+            print("   Cached roles: \(RoomManager.shared.cachedRoles)")
+            return
         }
 
         var imposterWrong = false
@@ -443,40 +459,50 @@ final class TapGuessViewController: UIViewController {
             print("👤 Player \(id.prefix(4)): guessed \(tap), correct: \(correct), ✓: \(isCorrect)")
 
             if id == imposterID {
-                if tap != correct { imposterWrong = true }
+                if tap != correct {
+                    imposterWrong = true
+                    print("   ⚠️ IMPOSTER GUESSED WRONG")
+                }
             } else {
-                if tap != correct { crewmatesWrong.append(id) }
+                if tap != correct {
+                    crewmatesWrong.append(id)
+                    print("   ⚠️ CREWMATE GUESSED WRONG")
+                }
             }
         }
 
-        print("📈 Imposter wrong: \(imposterWrong), Crewmates wrong: \(crewmatesWrong.count)")
+        print("📈 Summary:")
+        print("   - Imposter wrong: \(imposterWrong)")
+        print("   - Crewmates wrong: \(crewmatesWrong.count)")
 
         clearGuesses()
 
-        // 🎯 FIXED GAME LOGIC - Imposter has advantage when correct
-        
         let maxRounds = getMaxRounds()
         let myID = RoomManager.shared.currentUserID
         
-        // Case 1: Imposter guessed WRONG → Always go to voting
+        // 🎯 FIXED LOGIC: Only go to voting if imposter guessed WRONG
         if imposterWrong {
-            print("🎲 Case 1: Imposter guessed wrong → Voting")
+            print("🗳️ Case 1: Imposter guessed WRONG → GO TO VOTING")
             DispatchQueue.main.async {
+                print("🔄 Navigating to VotingViewController...")
                 let vc = VotingViewController(
                     roomCode: self.roomCode,
                     players: self.players,
                     currentRound: self.currentRound
                 )
                 self.navigationController?.pushViewController(vc, animated: true)
+                print("✅ Navigation initiated")
             }
             return
         }
         
-        // Case 2: Imposter CORRECT + Some crewmates wrong
+        // ✅ Imposter guessed CORRECT - Continue game based on crewmate performance
+        print("✅ Imposter guessed CORRECTLY")
+        
+        // Case 2: Imposter CORRECT + Some crewmates wrong → Eliminate crewmates
         if !crewmatesWrong.isEmpty {
-            print("🎲 Case 2: Imposter correct, \(crewmatesWrong.count) crewmate(s) wrong")
+            print("🎲 Case 2: Imposter correct, \(crewmatesWrong.count) crewmate(s) wrong → Eliminate them")
             
-            // 🔧 Filter out eliminated players for next round
             let survivingPlayers = players.filter { player in
                 let survived = !crewmatesWrong.contains(player.id)
                 if !survived {
@@ -487,44 +513,50 @@ final class TapGuessViewController: UIViewController {
             
             print("✅ Surviving players: \(survivingPlayers.count)")
             
-            // Check if this is the last round
-            if currentRound >= maxRounds {
-                print("🏆 Last round + imposter correct → IMPOSTER WINS")
+            // Check win conditions
+            if survivingPlayers.count <= 1 || currentRound >= maxRounds {
+                print("🏆 IMPOSTER WINS - Too few crewmates or last round reached")
                 DispatchQueue.main.async {
+                    print("🔄 Navigating to GameResultViewController (Imposter wins)...")
                     let vc = GameResultViewController(
                         crewmatesWon: false,
                         roomCode: self.roomCode
                     )
                     self.navigationController?.pushViewController(vc, animated: true)
+                    print("✅ Navigation initiated")
                 }
             } else {
-                // Not last round
+                // Check if I was eliminated
                 if crewmatesWrong.contains(myID) {
                     print("💀 I was eliminated → Spectator mode")
                     DispatchQueue.main.async {
+                        print("🔄 Navigating to SpectatorViewController...")
                         let vc = SpectatorViewController()
                         self.navigationController?.pushViewController(vc, animated: true)
+                        print("✅ Navigation initiated")
                     }
                 } else {
-                    print("✅ I survived → Next round")
+                    print("✅ I survived → Continue to next round")
                     continueToNextRound(with: survivingPlayers)
                 }
             }
             return
         }
         
-        // Case 3: Everyone correct (including imposter)
-        print("🎲 Case 3: Everyone guessed correctly")
+        // Case 3: Everyone guessed correctly (including imposter) → Continue to next round
+        print("🎲 Case 3: Everyone (including imposter) guessed correctly → Continue game")
         
         if currentRound >= maxRounds {
-            print("📊 Last round reached → Forced voting")
+            print("📊 Last round reached and everyone correct → Forced voting to find imposter")
             DispatchQueue.main.async {
+                print("🔄 Navigating to VotingViewController (forced - last round)...")
                 let vc = VotingViewController(
                     roomCode: self.roomCode,
                     players: self.players,
                     currentRound: self.currentRound
                 )
                 self.navigationController?.pushViewController(vc, animated: true)
+                print("✅ Navigation initiated")
             }
         } else {
             print("➡️ Continuing to round \(self.currentRound + 1)")
@@ -534,26 +566,26 @@ final class TapGuessViewController: UIViewController {
         print("=== END EVALUATION ===\n")
     }
 
-    // 🔧 Updated to accept filtered player list
     private func continueToNextRound(with activePlayers: [RoomManager.Player]) {
         let nextR = Int.random(in: 2...5)
         print("🎮 Next round: \(currentRound + 1), Rumbles: \(nextR), Active players: \(activePlayers.count)")
         
         DispatchQueue.main.async {
+            print("🔄 Navigating to HapticsRoomViewController...")
             let vc = HapticsRoomViewController(
                 roomCode: self.roomCode,
-                players: activePlayers,  // 🔧 Pass only surviving players
+                players: activePlayers,
                 rumbleCount: nextR,
                 role: self.myRole
             )
             vc.currentRound = self.currentRound + 1
             
-            // 🆕 Pass the selected avatar to next round
             if let avatar = self.selectedAvatar {
                 vc.selectedAvatar = avatar
             }
             
             self.navigationController?.pushViewController(vc, animated: true)
+            print("✅ Navigation initiated")
         }
     }
     

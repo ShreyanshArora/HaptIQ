@@ -83,12 +83,14 @@ class PlayerCell: UICollectionViewCell {
     
     func configure(with player: RoomManager.Player) {
         nameLabel.text = player.name
+        
         // Set avatar image
         if let avatarImage = player.avatarImage {
             avatarImageView.image = UIImage(named: avatarImage)
         } else {
             avatarImageView.image = UIImage(named: "char1")  // default avatar
         }
+
     }
 }
 
@@ -115,7 +117,7 @@ final class RoomLobbyViewController: UIViewController {
     private let codeContainerView: UIView = {
         let v = UIView()
         v.layer.cornerRadius = 20
-        v.layer.borderWidth = 1
+        v.layer.borderWidth = 2
         v.layer.borderColor = UIColor.white.cgColor
         v.translatesAutoresizingMaskIntoConstraints = false
         return v
@@ -156,7 +158,8 @@ final class RoomLobbyViewController: UIViewController {
         button.setTitle("Start", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = UIFont(name: "Aclonica-Regular", size: 24)
-        button.layer.cornerRadius = 20
+        button.layer.cornerRadius = 30
+        button.layer.borderWidth = 3
         button.layer.borderColor = UIColor.white.cgColor
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -205,8 +208,8 @@ final class RoomLobbyViewController: UIViewController {
         
         // Add gradient overlay
         gradientLayer.colors = [
-            UIColor(red: 6/255, green: 27/255, blue: 53/255, alpha: 0.6).cgColor,
-            UIColor(red: 18/255, green: 57/255, blue: 99/255, alpha: 0.6).cgColor
+            UIColor(red: 5/255, green: 10/255, blue: 35/255, alpha: 1).cgColor,
+            UIColor(red: 20/255, green: 45/255, blue: 120/255, alpha: 1).cgColor
         ]
         gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
         gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
@@ -254,22 +257,21 @@ final class RoomLobbyViewController: UIViewController {
     
     private func applyGradients() {
         // Apply gradient to code container
-        let codeLabelGradient = CAGradientLayer()
-        codeLabelGradient.frame = codeContainerView.bounds
-        codeLabelGradient.colors = [
-            UIColor(red: 41/255, green: 128/255, blue: 185/255, alpha: 1).cgColor,
-            UIColor(red: 109/255, green: 213/255, blue: 250/255, alpha: 1).cgColor
-        ]
-        codeLabelGradient.startPoint = CGPoint(x: 0, y: 0.5)
-        codeLabelGradient.endPoint = CGPoint(x: 1, y: 0.5)
-        codeLabelGradient.cornerRadius = 20
-        codeContainerView.layer.insertSublayer(codeLabelGradient, at: 0)
+        codeContainerView.applyGradient(
+            colors: [
+                UIColor(red: 5/255, green: 10/255, blue: 35/255, alpha: 1),
+                UIColor(red: 20/255, green: 45/255, blue: 120/255, alpha: 1)
+            ],
+            startPoint: CGPoint(x: 0, y: 0.5),
+            endPoint: CGPoint(x: 1, y: 0.5),
+            cornerRadius: 20
+        )
         
         // Apply gradient to startButton
         startButton.applyGradient(
             colors: [
-                UIColor(red: 41/255, green: 128/255, blue: 185/255, alpha: 1),
-                UIColor(red: 109/255, green: 213/255, blue: 250/255, alpha: 1)
+                UIColor(red: 5/255, green: 10/255, blue: 35/255, alpha: 1),
+                UIColor(red: 20/255, green: 45/255, blue: 120/255, alpha: 1)
             ],
             startPoint: CGPoint(x: 0, y: 0.5),
             endPoint: CGPoint(x: 1, y: 0.5),
@@ -289,8 +291,15 @@ final class RoomLobbyViewController: UIViewController {
             self.players = players
             DispatchQueue.main.async {
                 self.playersCollectionView.reloadData()
+                self.updateStartButtonVisibility()
             }
         }
+    }
+    
+    private func updateStartButtonVisibility() {
+        // Only show start button if current user is the host
+        let isHost = players.contains { $0.id == RoomManager.shared.currentUserID && $0.isHost }
+        startButton.isHidden = !isHost
     }
 
     private func observeState() {
