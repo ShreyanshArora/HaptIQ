@@ -1,4 +1,4 @@
-//
+
 //  HapticsRoomViewController.swift
 //  HaptIQ
 //
@@ -284,3 +284,4 @@ final class HapticsRoomViewController: UIViewController {
         navigationController?.pushViewController(vc, animated: true)
     }
 }
+
