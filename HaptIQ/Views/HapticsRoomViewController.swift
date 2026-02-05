@@ -1,7 +1,5 @@
-
 //  HapticsRoomViewController.swift
 //  HaptIQ
-//
 
 import UIKit
 import FirebaseFirestore
@@ -14,7 +12,7 @@ final class HapticsRoomViewController: UIViewController {
     var players: [RoomManager.Player] = []
     var role: PlayerRole
     var currentRound: Int = 1
-    var selectedAvatar: AvatarPage? // 🆕 Add this property to store selected avatar
+    var selectedAvatar: AvatarPage?
 
     enum PlayerRole { case crewmate, imposter }
 
@@ -22,10 +20,9 @@ final class HapticsRoomViewController: UIViewController {
     private var sentRumbles: Int = 0
     private var timer: Timer?
     private var secondsLeft = 10
-    private var inRound = false
-    private var stateListener: ListenerRegistration?
+    private var hasNavigated = false
 
-    // MARK: - PNG Animation
+    // MARK: - UI
     private let pngAnimationView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFill
@@ -34,22 +31,11 @@ final class HapticsRoomViewController: UIViewController {
         return iv
     }()
 
-    // MARK: UI
     private let bgImage: UIImageView = {
         let iv = UIImageView(image: UIImage(named: "gScreen"))
         iv.contentMode = .scaleAspectFill
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
-    }()
-
-    private let roleCard: UIView = {
-        let v = UIView()
-        v.backgroundColor = UIColor.white.withAlphaComponent(0.10)
-        v.layer.cornerRadius = 22
-        v.layer.borderWidth = 2
-        v.layer.borderColor = UIColor.white.withAlphaComponent(0.18).cgColor
-        v.translatesAutoresizingMaskIntoConstraints = false
-        return v
     }()
 
     private let roleLabel: UILabel = {
@@ -95,85 +81,64 @@ final class HapticsRoomViewController: UIViewController {
     }()
 
     // MARK: - Initializer
-    init(roomCode: String,
-         players: [RoomManager.Player],
-         rumbleCount: Int,
-         role: PlayerRole)
-    {
+    init(roomCode: String, players: [RoomManager.Player], rumbleCount: Int, role: PlayerRole) {
         self.roomCode = roomCode
         self.players = players
         self.rumbleCount = rumbleCount
         self.role = role
         super.init(nibName: nil, bundle: nil)
     }
+    
     required init?(coder: NSCoder) { fatalError("init(coder:) not allowed") }
 
-    // MARK: - Lifecycle
     deinit {
-        stateListener?.remove()
-        timer?.invalidate()
+        cleanup()
         print("🗑️ HapticsRoomViewController deallocated")
     }
+    
+    private func cleanup() {
+        timer?.invalidate()
+        timer = nil
+        pngAnimationView.stopAnimating()
+        pngAnimationView.animationImages = nil
+    }
 
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        navigationItem.hidesBackButton = true
         
-        // Debug: Check avatar status
-        if let avatar = selectedAvatar {
-            print("🎨 HapticsRoomViewController has avatar: \(avatar.title)")
-            print("   - lobbyImageName: \(avatar.lobbyImageName)")
-            print("   - imageName: \(avatar.imageName)")
-        } else {
-            print("⚠️ HapticsRoomViewController has NO avatar")
-        }
+        print("🎮 HapticsRoomViewController loaded - Round \(currentRound), Role: \(role), Rumbles: \(rumbleCount)")
         
         layoutUI()
         setupPNGAnimation()
         continueButton.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
         startHapticsRound()
-        
-        print("🎮 HapticsRoomViewController loaded - Round \(currentRound), Role: \(role), Players: \(players.count)")
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        timer?.invalidate()
+        cleanup()
     }
 
-    // MARK: - PNG Animation Setup
+    // MARK: - PNG Animation
     private func setupPNGAnimation() {
         guard let frame1 = UIImage(named: "haptic1"),
-              let frame2Original = UIImage(named: "haptic2") else {
-            print("⚠️ haptic1.png or haptic2.png not found")
+              let frame2 = UIImage(named: "haptic2") else {
+            print("⚠️ Animation images not found")
             return
         }
         
-        // Shift haptic2 image upward to align centers
-        let frame2 = shiftImageUp(frame2Original, by: 25)
-        
         pngAnimationView.animationImages = [frame1, frame2]
-        pngAnimationView.animationDuration = 1.3 // 1.3 seconds total (0.65 sec per frame)
-        pngAnimationView.animationRepeatCount = 0 // Loop forever
+        pngAnimationView.animationDuration = 1.3
+        pngAnimationView.animationRepeatCount = 0
         pngAnimationView.startAnimating()
     }
-    
-    private func shiftImageUp(_ image: UIImage, by offset: CGFloat) -> UIImage {
-        let newSize = image.size
-        UIGraphicsBeginImageContextWithOptions(newSize, false, image.scale)
-        
-        // Draw the image shifted up
-        image.draw(at: CGPoint(x: 0, y: -offset))
-        
-        let shiftedImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        
-        return shiftedImage ?? image
-    }
 
-    // MARK: UI
+    // MARK: - UI Layout
     private func layoutUI() {
         view.addSubview(bgImage)
-        view.addSubview(pngAnimationView) // Full screen PNG animation
+        view.addSubview(pngAnimationView)
         view.addSubview(roleLabel)
         view.addSubview(statusLabel)
         view.addSubview(timerLabel)
@@ -185,7 +150,6 @@ final class HapticsRoomViewController: UIViewController {
             bgImage.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bgImage.trailingAnchor.constraint(equalTo: view.trailingAnchor),
 
-            // PNG Animation - Full screen AspectFill
             pngAnimationView.topAnchor.constraint(equalTo: view.topAnchor),
             pngAnimationView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             pngAnimationView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -208,70 +172,63 @@ final class HapticsRoomViewController: UIViewController {
         ])
     }
 
-    @objc private func onBack() {
-        navigationController?.popViewController(animated: true)
-    }
-
-    // MARK: - GAME ROUND
-
+    // MARK: - Game Round
     private func startHapticsRound() {
         secondsLeft = 10
         updateTimerDisplay()
 
         if role == .crewmate {
             sentRumbles = rumbleCount
-            
-            // Delay haptic feedback by 2 seconds for crewmates
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                guard let self = self, !self.hasNavigated else { return }
                 HapticsEngineManager.shared.playCountableRumble(count: self.rumbleCount)
                 print("🔊 Crewmate received \(self.rumbleCount) rumbles")
             }
-            
         } else {
-            // Imposter doesn't feel rumbles
             sentRumbles = 0
-            print("🎭 Imposter: No rumbles sent")
+            print("🎭 Imposter: No rumbles")
         }
 
         startRoundTimer()
     }
     
     private func updateTimerDisplay() {
-        let minutes = secondsLeft / 60
-        let seconds = secondsLeft % 60
-        timerLabel.text = String(format: "%02d:%02d", minutes, seconds)
+        timerLabel.text = String(format: "%02d:%02d", secondsLeft / 60, secondsLeft % 60)
     }
 
     private func startRoundTimer() {
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            guard let s = self else { return }
-            s.secondsLeft -= 1
-            s.updateTimerDisplay()
+            guard let self = self else { return }
+            self.secondsLeft -= 1
+            self.updateTimerDisplay()
             
-            if s.secondsLeft <= 0 {
-                s.timer?.invalidate()
-                s.finishRound()
+            if self.secondsLeft <= 0 {
+                self.timer?.invalidate()
+                self.timer = nil
+                self.finishRound()
             }
         }
     }
 
     private func finishRound() {
-        continueButton.isHidden = false
-        print("⏱️ Round timer finished - Show continue button")
+        DispatchQueue.main.async { [weak self] in
+            self?.continueButton.isHidden = false
+        }
+        print("⏱️ Timer finished")
     }
 
+    // MARK: - Navigation
     @objc private func nextTapped() {
-        print("➡️ Continue tapped - Moving to TapGuessViewController")
+        guard !hasNavigated else { return }
+        hasNavigated = true
         
-        // Debug: Check avatar before passing
-        if let avatar = selectedAvatar {
-            print("🔍 Avatar being passed to TapGuessVC: \(avatar.title)")
-            print("   - lobbyImageName: \(avatar.lobbyImageName)")
-            print("   - imageName: \(avatar.imageName)")
-        } else {
-            print("⚠️ NO avatar to pass to TapGuessVC")
-        }
+        cleanup()
+        
+        continueButton.isEnabled = false
+        continueButton.alpha = 0.6
+        
+        print("➡️ Continue → TapGuessViewController")
         
         let vc = TapGuessViewController(
             roomCode: roomCode,
@@ -279,9 +236,11 @@ final class HapticsRoomViewController: UIViewController {
             myRole: role,
             players: players,
             currentRound: currentRound,
-            selectedAvatar: selectedAvatar // 🆕 Pass the selected avatar
+            selectedAvatar: selectedAvatar
         )
-        navigationController?.pushViewController(vc, animated: true)
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.navigationController?.pushViewController(vc, animated: true)
+        }
     }
 }
-

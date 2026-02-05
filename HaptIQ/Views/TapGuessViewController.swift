@@ -3,6 +3,7 @@ import FirebaseFirestore
 
 final class TapGuessViewController: UIViewController {
 
+    // MARK: - Properties
     private let roomCode: String
     private let rumbleCount: Int
     private let myRole: HapticsRoomViewController.PlayerRole
@@ -12,10 +13,16 @@ final class TapGuessViewController: UIViewController {
 
     private var myTapCount = 0
     private let db = Firestore.firestore()
-    private var listener: ListenerRegistration?
+    private var guessListener: ListenerRegistration?
+    private var gameStateListener: ListenerRegistration?
+    private var hasSubmitted = false
     private var hasProcessedResults = false
+    private var hasNavigated = false
+    
+    //  Track the timestamp when we start waiting for results
+    private var waitingForResultsSince: TimeInterval = 0
 
-    // UI
+    // MARK: - UI Components
     private let bgImage: UIImageView = {
         let iv = UIImageView(image: UIImage(named: "tapScreenBg"))
         iv.contentMode = .scaleAspectFill
@@ -44,14 +51,12 @@ final class TapGuessViewController: UIViewController {
         return l
     }()
 
-    // Concentric circles container
     private let circlesContainer: UIView = {
         let v = UIView()
         v.translatesAutoresizingMaskIntoConstraints = false
         return v
     }()
     
-    // Profile image in center
     private let profileImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFill
@@ -65,7 +70,6 @@ final class TapGuessViewController: UIViewController {
         return iv
     }()
     
-    // Counter controls
     private let counterContainer: UIView = {
         let v = UIView()
         v.translatesAutoresizingMaskIntoConstraints = false
@@ -79,8 +83,6 @@ final class TapGuessViewController: UIViewController {
         b.setTitleColor(.white, for: .normal)
         b.backgroundColor = UIColor.white.withAlphaComponent(0.1)
         b.layer.cornerRadius = 30
-        b.layer.borderWidth = 1
-        b.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
         b.translatesAutoresizingMaskIntoConstraints = false
         return b
     }()
@@ -102,8 +104,6 @@ final class TapGuessViewController: UIViewController {
         b.setTitleColor(.white, for: .normal)
         b.backgroundColor = UIColor.white.withAlphaComponent(0.1)
         b.layer.cornerRadius = 30
-        b.layer.borderWidth = 1
-        b.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
         b.translatesAutoresizingMaskIntoConstraints = false
         return b
     }()
@@ -119,7 +119,7 @@ final class TapGuessViewController: UIViewController {
         return b
     }()
 
-    // MARK: - Init
+    // MARK: - Initializer
     init(roomCode: String,
          rumbleCount: Int,
          myRole: HapticsRoomViewController.PlayerRole,
@@ -134,78 +134,50 @@ final class TapGuessViewController: UIViewController {
         self.selectedAvatar = selectedAvatar
         super.init(nibName: nil, bundle: nil)
     }
-    required init?(coder: NSCoder) { fatalError("not allowed") }
+    
+    required init?(coder: NSCoder) { fatalError("init(coder:) not allowed") }
 
     deinit {
-        listener?.remove()
+        cleanup()
         print("🗑️ TapGuessViewController deallocated")
     }
+    
+    private func cleanup() {
+        guessListener?.remove()
+        guessListener = nil
+        gameStateListener?.remove()
+        gameStateListener = nil
+    }
 
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        if let avatar = selectedAvatar {
-            print("🎨 Avatar passed to TapGuessViewController: \(avatar.title)")
-        } else {
-            print("⚠️ NO avatar passed to TapGuessViewController")
-        }
+        navigationItem.hidesBackButton = true
         
         layoutUI()
         setupButtonActions()
         loadUserProfile()
         
-        print("📱 TapGuessViewController loaded - Round \(currentRound), Players: \(players.count), Rumbles: \(rumbleCount)")
+        print("📱 TapGuessViewController loaded - Round \(currentRound), Players: \(players.count), Expected: \(rumbleCount)")
+        print("👑 Am I host? \(RoomManager.shared.isHost)")
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        print("📱 TapGuessViewController appeared")
-        print("   - Navigation stack: \(navigationController?.viewControllers.count ?? 0) controllers")
-    }
-
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        print("📱 TapGuessViewController will disappear")
+        cleanup()
+        print("🛑 TapGuessViewController will disappear")
     }
     
+    // MARK: - Profile Loading
     private func loadUserProfile() {
-        if let avatar = selectedAvatar {
-            if let avatarImage = UIImage(named: avatar.imageName) {
-                profileImageView.image = avatarImage
-                print("✅ Loaded avatar: \(avatar.title) - \(avatar.imageName)")
-            } else {
-                print("⚠️ Avatar image '\(avatar.imageName)' not found in assets")
-                if let lobbyImage = UIImage(named: avatar.lobbyImageName) {
-                    profileImageView.image = lobbyImage
-                    print("✅ Using lobby image instead: \(avatar.lobbyImageName)")
-                } else {
-                    print("❌ Neither avatar image found, using default")
-                    profileImageView.image = UIImage(named: "defaultProfile") ?? UIImage(systemName: "person.circle.fill")
-                }
-            }
-        } else {
-            print("⚠️ No avatar passed to TapGuessViewController")
-            if let savedAvatarName = UserDefaults.standard.string(forKey: "selectedAvatar_\(RoomManager.shared.currentUserID)") {
-                if let savedImage = UIImage(named: savedAvatarName) {
-                    profileImageView.image = savedImage
-                    print("✅ Loaded saved avatar: \(savedAvatarName)")
-                } else {
-                    print("⚠️ Saved avatar '\(savedAvatarName)' not found")
-                    profileImageView.image = UIImage(named: "defaultProfile") ?? UIImage(systemName: "person.circle.fill")
-                }
-            } else {
-                print("⚠️ Using default profile image")
-                profileImageView.image = UIImage(named: "defaultProfile") ?? UIImage(systemName: "person.circle.fill")
-            }
-        }
-        
-        if profileImageView.image != nil {
-            print("✅ Profile image view has an image")
-        } else {
-            print("❌ Profile image view has NO image")
+        if let avatar = selectedAvatar, let img = UIImage(named: avatar.imageName) {
+            profileImageView.image = img
+        } else if let avatar = selectedAvatar, let img = UIImage(named: avatar.lobbyImageName) {
+            profileImageView.image = img
         }
     }
     
+    // MARK: - Button Setup
     private func setupButtonActions() {
         incrementButton.addTarget(self, action: #selector(incrementTapped), for: .touchUpInside)
         decrementButton.addTarget(self, action: #selector(decrementTapped), for: .touchUpInside)
@@ -216,7 +188,7 @@ final class TapGuessViewController: UIViewController {
         profileImageView.isUserInteractionEnabled = true
     }
 
-    // MARK: UI Layout
+    // MARK: - UI Layout
     private func layoutUI() {
         view.addSubview(bgImage)
         view.addSubview(titleLabel)
@@ -226,7 +198,6 @@ final class TapGuessViewController: UIViewController {
         view.addSubview(submitButton)
         
         circlesContainer.addSubview(profileImageView)
-        
         counterContainer.addSubview(decrementButton)
         counterContainer.addSubview(counterLabel)
         counterContainer.addSubview(incrementButton)
@@ -282,65 +253,46 @@ final class TapGuessViewController: UIViewController {
     
     // MARK: - Game Rules
     private func getMaxRounds() -> Int {
-        let playerCount = players.count
-        if playerCount >= 5 {
-            return 3
-        } else if playerCount >= 3 {
-            return 2
-        } else {
-            return 1
-        }
+        if players.count >= 5 { return 3 }
+        else if players.count >= 3 { return 2 }
+        else { return 2 }
     }
 
     // MARK: - Button Actions
     @objc private func incrementTapped() {
         myTapCount += 1
-        updateCounter()
+        counterLabel.text = "\(myTapCount)"
         HapticsEngineManager.shared.playRumble()
     }
     
     @objc private func decrementTapped() {
-        if myTapCount > 0 {
-            myTapCount -= 1
-            updateCounter()
-            HapticsEngineManager.shared.playRumble()
-        }
+        guard myTapCount > 0 else { return }
+        myTapCount -= 1
+        counterLabel.text = "\(myTapCount)"
+        HapticsEngineManager.shared.playRumble()
     }
     
     @objc private func profileTapped() {
         myTapCount += 1
-        updateCounter()
-        HapticsEngineManager.shared.playRumble()
-        
-        UIView.animate(withDuration: 0.1, animations: {
-            self.profileImageView.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-        }) { _ in
-            UIView.animate(withDuration: 0.1) {
-                self.profileImageView.transform = .identity
-            }
-        }
-    }
-    
-    private func updateCounter() {
         counterLabel.text = "\(myTapCount)"
-        
-        UIView.animate(withDuration: 0.15, animations: {
-            self.counterLabel.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
-        }) { _ in
-            UIView.animate(withDuration: 0.15) {
-                self.counterLabel.transform = .identity
-            }
-        }
+        HapticsEngineManager.shared.playRumble()
     }
 
-    // MARK: - Submit with Improved Error Handling
+    // MARK: - Submit Guess
     @objc private func submitTapped() {
+        guard !hasSubmitted else { return }
+        hasSubmitted = true
+        
         let uid = RoomManager.shared.currentUserID
         
-        print("🔵 SUBMIT TAPPED - User: \(uid.prefix(4))")
-        print("   - Tap Count: \(myTapCount)")
-        print("   - Expected Rumbles: \(rumbleCount)")
-        print("   - Total Players: \(players.count)")
+        print("🔵 SUBMIT - User: \(String(uid.prefix(8))), Taps: \(myTapCount), Expected: \(rumbleCount)")
+        
+        submitButton.isEnabled = false
+        submitButton.alpha = 0.6
+        submitButton.setTitle("Waiting...", for: .normal)
+        
+        // ✅ Record when we started waiting
+        waitingForResultsSince = Date().timeIntervalSince1970
 
         db.collection("rooms")
             .document(roomCode)
@@ -348,262 +300,369 @@ final class TapGuessViewController: UIViewController {
             .document(uid)
             .setData([
                 "tapCount": myTapCount,
-                "rumbleCount": rumbleCount,
                 "playerID": uid,
+                "round": currentRound,
                 "timestamp": FieldValue.serverTimestamp()
-            ], merge: true) { error in
-                if let error = error {
-                    print("❌ Submit error: \(error)")
-                    return
-                }
-                
-                print("✅ Successfully submitted guess to Firestore")
-                
-                DispatchQueue.main.async {
-                    self.listenForResults()
-                    self.submitButton.isEnabled = false
-                    self.submitButton.alpha = 0.6
-                    self.submitButton.setTitle("Waiting...", for: .normal)
-                }
-            }
-    }
-
-    // MARK: - Improved Listen For Results
-    private func listenForResults() {
-        guard !hasProcessedResults else {
-            print("⚠️ Already processed results, skipping listener")
-            return
-        }
-        
-        print("👂 Starting to listen for results...")
-        print("   - Expected players: \(players.count)")
-        
-        listener?.remove()
-        listener = db.collection("rooms")
-            .document(roomCode)
-            .collection("guesses")
-            .addSnapshotListener { [weak self] snap, error in
+            ]) { [weak self] error in
                 guard let self = self else { return }
                 
                 if let error = error {
-                    print("❌ Listener error: \(error)")
+                    print("❌ Submit error: \(error)")
+                    self.hasSubmitted = false
+                    self.submitButton.isEnabled = true
+                    self.submitButton.alpha = 1.0
+                    self.submitButton.setTitle("Next", for: .normal)
                     return
                 }
                 
-                guard let docs = snap?.documents else {
-                    print("⚠️ No documents in snapshot")
-                    return
-                }
+                print("✅ Guess submitted")
                 
-                let submittedPlayerIDs = Set(docs.compactMap { $0.data()["playerID"] as? String })
-                let expectedPlayerIDs = Set(self.players.map { $0.id })
-                
-                print("📊 Guess Status:")
-                print("   - Submitted: \(submittedPlayerIDs.count)/\(self.players.count)")
-                print("   - Submitted IDs: \(submittedPlayerIDs.map { $0.prefix(4) })")
-                print("   - Expected IDs: \(expectedPlayerIDs.map { $0.prefix(4) })")
-                print("   - Missing: \(expectedPlayerIDs.subtracting(submittedPlayerIDs).map { $0.prefix(4) })")
-                
-                let allPlayersSubmitted = submittedPlayerIDs.count >= self.players.count
-                
-                if allPlayersSubmitted && !self.hasProcessedResults {
-                    print("🎯 All players submitted! Processing results...")
-                    self.hasProcessedResults = true
-                    self.listener?.remove()
-                    
-                    let results = docs.map { $0.data() }
-                    
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        self.evaluateResults(results)
-                    }
-                } else if !allPlayersSubmitted {
-                    print("⏳ Still waiting for \(self.players.count - submittedPlayerIDs.count) player(s)")
+                if RoomManager.shared.isHost {
+                    // ✅ HOST: Listen for all guesses, then evaluate
+                    self.hostListenForAllGuesses()
+                } else {
+                    // ✅ NON-HOST: Listen for game state update from host
+                    self.nonHostListenForGameState()
                 }
             }
     }
 
-    // MARK: - Result Evaluation (FIXED VOTING LOGIC)
-    private func evaluateResults(_ guesses: [[String: Any]]) {
-        print("\n🎯 === EVALUATING ROUND \(currentRound) ===")
-        print("📊 Total guesses received: \(guesses.count)")
-        print("👥 Expected players: \(players.count)")
+    // ════════════════════════════════════════════════════════════════════
+    // MARK: - HOST ONLY: Listen for all guesses and evaluate
+    // ════════════════════════════════════════════════════════════════════
+    
+    private func hostListenForAllGuesses() {
+        guard RoomManager.shared.isHost else { return }
         
-        guard guesses.count >= players.count else {
-            print("⚠️ WARNING: Not enough guesses (\(guesses.count)/\(players.count))")
-            return
-        }
+        print("👑 [HOST] Listening for all guesses...")
         
+        guessListener?.remove()
+        guessListener = db.collection("rooms")
+            .document(roomCode)
+            .collection("guesses")
+            .whereField("round", isEqualTo: currentRound)
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let self = self else { return }
+                guard RoomManager.shared.isHost else { return }
+                guard !self.hasProcessedResults else { return }
+                
+                if let error = error {
+                    print("❌ [HOST] Listener error: \(error)")
+                    return
+                }
+                
+                guard let documents = snapshot?.documents else { return }
+                
+                print("👑 [HOST] Guesses for round \(self.currentRound): \(documents.count)/\(self.players.count)")
+                
+                if documents.count >= self.players.count {
+                    print("👑 [HOST] All players submitted!")
+                    
+                    self.hasProcessedResults = true
+                    self.guessListener?.remove()
+                    self.guessListener = nil
+                    
+                    let allGuesses = documents.map { $0.data() }
+                    self.hostEvaluateAndWriteGameState(allGuesses)
+                }
+            }
+    }
+    
+    private func hostEvaluateAndWriteGameState(_ guesses: [[String: Any]]) {
+        guard RoomManager.shared.isHost else { return }
+        
+        print("\n👑 [HOST] === EVALUATING ROUND \(currentRound) ===")
+        
+        // Find imposter
         var imposterID = ""
-        for (id, role) in RoomManager.shared.cachedRoles {
+        for (playerID, role) in RoomManager.shared.cachedRoles {
             if role == "imposter" {
-                imposterID = id
-                print("🎭 Imposter ID: \(id.prefix(4))")
+                imposterID = playerID
+                break
             }
         }
         
         guard !imposterID.isEmpty else {
-            print("❌ ERROR: No imposter found in cached roles!")
-            print("   Cached roles: \(RoomManager.shared.cachedRoles)")
+            print("❌ [HOST] No imposter found")
             return
         }
+        
+        print("👑 [HOST] Imposter: \(String(imposterID.prefix(8)))")
 
         var imposterWrong = false
-        var crewmatesWrong: [String] = []
+        var wrongCrewmates: [String] = []
 
-        for g in guesses {
-            let id = g["playerID"] as? String ?? ""
-            let tap = g["tapCount"] as? Int ?? 0
-            let correct = g["rumbleCount"] as? Int ?? rumbleCount
+        for guess in guesses {
+            guard let playerID = guess["playerID"] as? String,
+                  let tapCount = guess["tapCount"] as? Int else { continue }
+            
+            let isCorrect = tapCount == rumbleCount
+            print("👑 [HOST] Player \(String(playerID.prefix(8))): \(tapCount) vs \(rumbleCount) = \(isCorrect ? "✅" : "❌")")
 
-            let isCorrect = tap == correct
-            print("👤 Player \(id.prefix(4)): guessed \(tap), correct: \(correct), ✓: \(isCorrect)")
-
-            if id == imposterID {
-                if tap != correct {
-                    imposterWrong = true
-                    print("   ⚠️ IMPOSTER GUESSED WRONG")
-                }
+            if playerID == imposterID {
+                if !isCorrect { imposterWrong = true }
             } else {
-                if tap != correct {
-                    crewmatesWrong.append(id)
-                    print("   ⚠️ CREWMATE GUESSED WRONG")
-                }
+                if !isCorrect { wrongCrewmates.append(playerID) }
             }
         }
 
-        print("📈 Summary:")
-        print("   - Imposter wrong: \(imposterWrong)")
-        print("   - Crewmates wrong: \(crewmatesWrong.count)")
+        print("👑 [HOST] Imposter wrong: \(imposterWrong), Crewmates wrong: \(wrongCrewmates.count)")
 
-        clearGuesses()
-
+        // Determine next state
         let maxRounds = getMaxRounds()
-        let myID = RoomManager.shared.currentUserID
+        var nextScreen: String
+        var nextRound = currentRound
+        var nextRumbleCount = rumbleCount
+        var survivingPlayerIDs = players.map { $0.id }
+        var eliminatedPlayerIDs: [String] = []
+        var crewmatesWon: Bool? = nil
         
-        // 🎯 FIXED LOGIC: Only go to voting if imposter guessed WRONG
+        // CASE 1: Imposter wrong → Voting
         if imposterWrong {
-            print("🗳️ Case 1: Imposter guessed WRONG → GO TO VOTING")
-            DispatchQueue.main.async {
-                print("🔄 Navigating to VotingViewController...")
-                let vc = VotingViewController(
-                    roomCode: self.roomCode,
-                    players: self.players,
-                    currentRound: self.currentRound
-                )
-                self.navigationController?.pushViewController(vc, animated: true)
-                print("✅ Navigation initiated")
-            }
-            return
+            print("👑 [HOST] Decision: → VOTING (Imposter wrong)")
+            nextScreen = "voting"
         }
-        
-        // ✅ Imposter guessed CORRECT - Continue game based on crewmate performance
-        print("✅ Imposter guessed CORRECTLY")
-        
-        // Case 2: Imposter CORRECT + Some crewmates wrong → Eliminate crewmates
-        if !crewmatesWrong.isEmpty {
-            print("🎲 Case 2: Imposter correct, \(crewmatesWrong.count) crewmate(s) wrong → Eliminate them")
+        // CASE 2: Imposter correct + crewmates wrong → Eliminate
+        else if !wrongCrewmates.isEmpty {
+            eliminatedPlayerIDs = wrongCrewmates
+            survivingPlayerIDs = players.map { $0.id }.filter { !wrongCrewmates.contains($0) }
+            let crewmatesRemaining = survivingPlayerIDs.filter { $0 != imposterID }.count
             
-            let survivingPlayers = players.filter { player in
-                let survived = !crewmatesWrong.contains(player.id)
-                if !survived {
-                    print("💀 Eliminated: \(player.name) (\(player.id.prefix(4)))")
-                }
-                return survived
-            }
-            
-            print("✅ Surviving players: \(survivingPlayers.count)")
-            
-            // Check win conditions
-            if survivingPlayers.count <= 1 || currentRound >= maxRounds {
-                print("🏆 IMPOSTER WINS - Too few crewmates or last round reached")
-                DispatchQueue.main.async {
-                    print("🔄 Navigating to GameResultViewController (Imposter wins)...")
-                    let vc = GameResultViewController(
-                        crewmatesWon: false,
-                        roomCode: self.roomCode
-                    )
-                    self.navigationController?.pushViewController(vc, animated: true)
-                    print("✅ Navigation initiated")
-                }
+            if crewmatesRemaining <= 1 {
+                print("👑 [HOST] Decision: → RESULT (Imposter wins)")
+                nextScreen = "result"
+                crewmatesWon = false
             } else {
-                // Check if I was eliminated
-                if crewmatesWrong.contains(myID) {
-                    print("💀 I was eliminated → Spectator mode")
-                    DispatchQueue.main.async {
-                        print("🔄 Navigating to SpectatorViewController...")
-                        let vc = SpectatorViewController()
-                        self.navigationController?.pushViewController(vc, animated: true)
-                        print("✅ Navigation initiated")
-                    }
-                } else {
-                    print("✅ I survived → Continue to next round")
-                    continueToNextRound(with: survivingPlayers)
+                print("👑 [HOST] Decision: → HAPTICS Round \(currentRound + 1)")
+                nextScreen = "haptics"
+                nextRound = currentRound + 1
+                nextRumbleCount = Int.random(in: 2...5)
+            }
+        }
+        // CASE 3: Everyone correct
+        else {
+            if currentRound >= maxRounds {
+                print("👑 [HOST] Decision: → VOTING (Max rounds)")
+                nextScreen = "voting"
+            } else {
+                print("👑 [HOST] Decision: → HAPTICS Round \(currentRound + 1)")
+                nextScreen = "haptics"
+                nextRound = currentRound + 1
+                nextRumbleCount = Int.random(in: 2...5)
+            }
+        }
+        
+        // ✅ Write game state to Firestore
+        let gameStateData: [String: Any] = [
+            "screen": nextScreen,
+            "round": nextRound,
+            "rumbleCount": nextRumbleCount,
+            "survivingPlayerIDs": survivingPlayerIDs,
+            "eliminatedPlayerIDs": eliminatedPlayerIDs,
+            "crewmatesWon": crewmatesWon as Any,
+            "forRound": currentRound,  // ✅ Which round this result is for
+            "timestamp": FieldValue.serverTimestamp()
+        ]
+        
+        print("👑 [HOST] Writing gameState: screen=\(nextScreen), forRound=\(currentRound)")
+        
+        db.collection("rooms")
+            .document(roomCode)
+            .updateData(["gameState": gameStateData]) { [weak self] error in
+                guard let self = self else { return }
+                
+                if let error = error {
+                    print("❌ [HOST] Failed to write gameState: \(error)")
+                    return
+                }
+                
+                print("✅ [HOST] gameState written successfully")
+                
+                // ✅ Clear guesses after writing state
+                self.clearGuesses()
+                
+                // ✅ Host navigates based on what they wrote
+                DispatchQueue.main.async {
+                    self.navigateToScreen(
+                        screen: nextScreen,
+                        round: nextRound,
+                        rumbleCount: nextRumbleCount,
+                        survivingPlayerIDs: survivingPlayerIDs,
+                        eliminatedPlayerIDs: eliminatedPlayerIDs,
+                        crewmatesWon: crewmatesWon
+                    )
                 }
             }
-            return
-        }
-        
-        // Case 3: Everyone guessed correctly (including imposter) → Continue to next round
-        print("🎲 Case 3: Everyone (including imposter) guessed correctly → Continue game")
-        
-        if currentRound >= maxRounds {
-            print("📊 Last round reached and everyone correct → Forced voting to find imposter")
-            DispatchQueue.main.async {
-                print("🔄 Navigating to VotingViewController (forced - last round)...")
-                let vc = VotingViewController(
-                    roomCode: self.roomCode,
-                    players: self.players,
-                    currentRound: self.currentRound
-                )
-                self.navigationController?.pushViewController(vc, animated: true)
-                print("✅ Navigation initiated")
-            }
-        } else {
-            print("➡️ Continuing to round \(self.currentRound + 1)")
-            continueToNextRound(with: players)
-        }
-        
-        print("=== END EVALUATION ===\n")
     }
 
-    private func continueToNextRound(with activePlayers: [RoomManager.Player]) {
-        let nextR = Int.random(in: 2...5)
-        print("🎮 Next round: \(currentRound + 1), Rumbles: \(nextR), Active players: \(activePlayers.count)")
+    // ════════════════════════════════════════════════════════════════════
+    // MARK: - NON-HOST: Listen for game state from host
+    // ════════════════════════════════════════════════════════════════════
+    
+    private func nonHostListenForGameState() {
+        guard !RoomManager.shared.isHost else { return }
         
-        DispatchQueue.main.async {
-            print("🔄 Navigating to HapticsRoomViewController...")
-            let vc = HapticsRoomViewController(
-                roomCode: self.roomCode,
-                players: activePlayers,
-                rumbleCount: nextR,
-                role: self.myRole
-            )
-            vc.currentRound = self.currentRound + 1
-            
-            if let avatar = self.selectedAvatar {
-                vc.selectedAvatar = avatar
+        print("👂 [NON-HOST] Listening for gameState...")
+        
+        gameStateListener?.remove()
+        gameStateListener = db.collection("rooms")
+            .document(roomCode)
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let self = self else { return }
+                guard !self.hasNavigated else { return }
+                
+                if let error = error {
+                    print("❌ [NON-HOST] Listener error: \(error)")
+                    return
+                }
+                
+                guard let data = snapshot?.data(),
+                      let gameState = data["gameState"] as? [String: Any] else {
+                    print("👂 [NON-HOST] No gameState yet")
+                    return
+                }
+                
+                // ✅ Check if this update is for our current round
+                let forRound = gameState["forRound"] as? Int ?? 0
+                guard forRound == self.currentRound else {
+                    print("👂 [NON-HOST] Ignoring gameState for round \(forRound), we're on \(self.currentRound)")
+                    return
+                }
+                
+                // ✅ Check timestamp to ensure it's a new update
+                if let timestamp = gameState["timestamp"] as? Timestamp {
+                    let stateTime = timestamp.dateValue().timeIntervalSince1970
+                    guard stateTime > self.waitingForResultsSince else {
+                        print("👂 [NON-HOST] Ignoring old gameState (before we submitted)")
+                        return
+                    }
+                }
+                
+                let screen = gameState["screen"] as? String ?? ""
+                let round = gameState["round"] as? Int ?? 1
+                let rumbleCount = gameState["rumbleCount"] as? Int ?? 3
+                let survivingPlayerIDs = gameState["survivingPlayerIDs"] as? [String] ?? []
+                let eliminatedPlayerIDs = gameState["eliminatedPlayerIDs"] as? [String] ?? []
+                let crewmatesWon = gameState["crewmatesWon"] as? Bool
+                
+                print("📡 [NON-HOST] Received gameState: screen=\(screen), round=\(round), forRound=\(forRound)")
+                
+                // ✅ Stop listening
+                self.gameStateListener?.remove()
+                self.gameStateListener = nil
+                
+                // ✅ Navigate
+                DispatchQueue.main.async {
+                    self.navigateToScreen(
+                        screen: screen,
+                        round: round,
+                        rumbleCount: rumbleCount,
+                        survivingPlayerIDs: survivingPlayerIDs,
+                        eliminatedPlayerIDs: eliminatedPlayerIDs,
+                        crewmatesWon: crewmatesWon
+                    )
+                }
             }
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // MARK: - Navigation (Both Host and Non-Host)
+    // ════════════════════════════════════════════════════════════════════
+    
+    private func navigateToScreen(screen: String,
+                                   round: Int,
+                                   rumbleCount: Int,
+                                   survivingPlayerIDs: [String],
+                                   eliminatedPlayerIDs: [String],
+                                   crewmatesWon: Bool?) {
+        guard !hasNavigated else {
+            print("⚠️ Already navigated, ignoring")
+            return
+        }
+        hasNavigated = true
+        
+        cleanup()
+        
+        let myID = RoomManager.shared.currentUserID
+        
+        // Check if I was eliminated
+        if eliminatedPlayerIDs.contains(myID) {
+            print("💀 I was eliminated → Spectator")
+            navigateToSpectator()
+            return
+        }
+        
+        print("🔄 Navigating to: \(screen)")
+        
+        switch screen {
+        case "voting":
+            navigateToVoting()
             
-            self.navigationController?.pushViewController(vc, animated: true)
-            print("✅ Navigation initiated")
+        case "haptics":
+            let survivingPlayers = players.filter { survivingPlayerIDs.contains($0.id) }
+            navigateToHaptics(round: round, rumbleCount: rumbleCount, players: survivingPlayers)
+            
+        case "result":
+            navigateToGameResult(crewmatesWon: crewmatesWon ?? false)
+            
+        default:
+            print("⚠️ Unknown screen: \(screen)")
         }
     }
     
+    private func navigateToVoting() {
+        let vc = VotingViewController(
+            roomCode: roomCode,
+            players: players,
+            currentRound: currentRound
+        )
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    private func navigateToHaptics(round: Int, rumbleCount: Int, players: [RoomManager.Player]) {
+        let vc = HapticsRoomViewController(
+            roomCode: roomCode,
+            players: players,
+            rumbleCount: rumbleCount,
+            role: myRole
+        )
+        vc.currentRound = round
+        vc.selectedAvatar = selectedAvatar
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    private func navigateToGameResult(crewmatesWon: Bool) {
+        let vc = GameResultViewController(
+            crewmatesWon: crewmatesWon,
+            roomCode: roomCode,
+            eliminatedPlayerName: "",
+            eliminatedAvatarImage: "char1"
+        )
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    private func navigateToSpectator() {
+        let vc = SpectatorViewController()
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+    // MARK: - Cleanup
     private func clearGuesses() {
         db.collection("rooms")
             .document(roomCode)
             .collection("guesses")
-            .getDocuments { snap, _ in
-                guard let docs = snap?.documents else { return }
+            .whereField("round", isEqualTo: currentRound)
+            .getDocuments { [weak self] snapshot, _ in
+                guard let documents = snapshot?.documents, !documents.isEmpty else { return }
+                guard let self = self else { return }
+                
                 let batch = self.db.batch()
-                for doc in docs {
+                for doc in documents {
                     batch.deleteDocument(doc.reference)
                 }
                 batch.commit { error in
-                    if let error = error {
-                        print("❌ Error clearing guesses: \(error)")
-                    } else {
-                        print("🧹 Cleared \(docs.count) guesses")
+                    if error == nil {
+                        print("🧹 Cleared \(documents.count) guesses for round \(self.currentRound)")
                     }
                 }
             }
