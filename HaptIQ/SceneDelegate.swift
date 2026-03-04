@@ -1,6 +1,5 @@
 
 import UIKit
-import SwiftUI
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
@@ -12,7 +11,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
         let window = UIWindow(windowScene: windowScene)
-        let mainVC = JoinRoomViewController()
+        let mainVC = HomeViewController()
         let navController = UINavigationController(rootViewController: mainVC)
         navController.isNavigationBarHidden = true
         window.rootViewController = navController

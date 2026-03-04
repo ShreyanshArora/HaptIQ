@@ -1,0 +1,132 @@
+//
+//  PageViewController.swift
+//  HaptIQ
+//
+//  Created by Anuj   on 15/11/25.
+//
+
+import UIKit
+
+class OnboardingController: UIPageViewController,
+                            UIPageViewControllerDataSource,
+                            UIPageViewControllerDelegate {
+    
+    // MARK: - Pages
+    private let pages: [OnboardingPage] = [
+        OnboardingPage(imageName: "Rect1", text: "Trust no one. Outsmart your friends"),
+        OnboardingPage(imageName: "Rect2", text: "Feel the clues. Catch the imposter."),
+        OnboardingPage(imageName: "Rect3", text: "Every vibration hides a secret."),
+        OnboardingPage(imageName: "Rect4", text: "One wrong guess... everyone loses.")
+    ]
+    
+    private lazy var controllers: [UIViewController] = {
+        pages.map { OnboardingPageVC(page: $0) }
+    }()
+    
+    
+    // MARK: - PageControl (dots)
+    private let pageControl: UIPageControl = {
+        let pc = UIPageControl()
+        pc.numberOfPages = 4
+        pc.currentPage = 0
+        pc.currentPageIndicatorTintColor = .white
+        pc.pageIndicatorTintColor = UIColor(white: 0.6, alpha: 1.0)
+        pc.translatesAutoresizingMaskIntoConstraints = false
+        return pc
+    }()
+    
+    // MARK: - Skip button
+    private let skipButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setTitle("Skip", for: .normal)
+        btn.setTitleColor(.white, for: .normal)
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        return btn
+    }()
+    
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        dataSource = self
+        delegate = self
+        
+        setViewControllers([controllers[0]], direction: .forward, animated: true)
+        
+        setupPageControl()
+        setupSkipButton()
+    }
+    
+    
+    // MARK: - Setup PageControl
+    private func setupPageControl() {
+        view.addSubview(pageControl)
+        
+        NSLayoutConstraint.activate([
+            pageControl.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
+            pageControl.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+        ])
+    }
+    
+    // MARK: - Setup Skip Button
+    private func setupSkipButton() {
+        view.addSubview(skipButton)
+        skipButton.addTarget(self, action: #selector(skipTapped), for: .touchUpInside)
+        
+        NSLayoutConstraint.activate([
+            skipButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            skipButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+        ])
+    }
+    
+    
+    // MARK: - Skip Action
+    @objc private func skipTapped() {
+        let vc = AvatarSelectionController()
+        navigationController?.setViewControllers([vc], animated: true)
+    }
+    
+    
+    // MARK: - Swipe Back
+    func pageViewController(_ pageViewController: UIPageViewController,
+                            viewControllerBefore viewController: UIViewController) -> UIViewController? {
+        
+        guard let index = controllers.firstIndex(of: viewController),
+              index > 0 else { return nil }
+        
+        return controllers[index - 1]
+    }
+    
+    
+    // MARK: - Swipe Forward
+    func pageViewController(_ pageViewController: UIPageViewController,
+                            viewControllerAfter viewController: UIViewController) -> UIViewController? {
+        
+        guard let index = controllers.firstIndex(of: viewController) else { return nil }
+        
+        // If last page → move to next screen
+        if index == controllers.count - 1 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                let vc = AvatarSelectionController()
+                self.navigationController?.setViewControllers([vc], animated: true)
+            }
+            return nil
+        }
+        
+        return controllers[index + 1]
+    }
+    
+    // MARK: - Update dots
+    func pageViewController(_ pageViewController: UIPageViewController,
+                            didFinishAnimating finished: Bool,
+                            previousViewControllers: [UIViewController],
+                            transitionCompleted completed: Bool) {
+        
+        if completed,
+           let visibleVC = pageViewController.viewControllers?.first,
+           let index = controllers.firstIndex(of: visibleVC) {
+            pageControl.currentPage = index
+        }
+    }
+}
