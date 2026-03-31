@@ -47,7 +47,6 @@ class PlayerCell: UICollectionViewCell {
         return l
     }()
     
-    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupViews()
@@ -77,20 +76,16 @@ class PlayerCell: UICollectionViewCell {
             nameLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
             nameLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
             nameLabel.bottomAnchor.constraint(lessThanOrEqualTo: containerView.bottomAnchor),
-            
         ])
     }
     
     func configure(with player: RoomManager.Player) {
         nameLabel.text = player.name
-        
-        // Set avatar image
         if let avatarImage = player.avatarImage {
             avatarImageView.image = UIImage(named: avatarImage)
         } else {
-            avatarImageView.image = UIImage(named: "char1")  // default avatar
+            avatarImageView.image = UIImage(named: "char1")
         }
-
     }
 }
 
@@ -103,6 +98,9 @@ final class RoomLobbyViewController: UIViewController {
     private var playersListener: ListenerRegistration?
     private var stateListener: ListenerRegistration?
     private var players: [RoomManager.Player] = []
+    
+    // ✅ CRITICAL: Flag to prevent duplicate navigation
+    private var hasLeftLobby = false
 
     // UI Components
     private let roomTitleLabel: UILabel = {
@@ -165,11 +163,11 @@ final class RoomLobbyViewController: UIViewController {
         return button
     }()
 
-
     init(roomCode: String) {
         self.roomCode = roomCode
         super.init(nibName: nil, bundle: nil)
     }
+    
     required init?(coder: NSCoder) { fatalError() }
 
     override func viewDidLoad() {
@@ -179,25 +177,32 @@ final class RoomLobbyViewController: UIViewController {
         codeLabel.text = roomCode
         observePlayers()
         observeState()
+        
+        print("📍 RoomLobbyViewController loaded - Room: \(roomCode)")
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         gradientLayer.frame = view.bounds
-        
-        // Apply gradients after layout is complete
         applyGradients()
     }
 
     deinit {
+        removeAllListeners()
+        print("🗑️ RoomLobbyViewController deallocated")
+    }
+    
+    // ✅ Centralized listener cleanup
+    private func removeAllListeners() {
         playersListener?.remove()
+        playersListener = nil
         stateListener?.remove()
+        stateListener = nil
     }
 
     private func setupUI() {
         view.backgroundColor = .black
         
-        // Add background image
         let backgroundImageView = UIImageView(frame: view.bounds)
         backgroundImageView.image = UIImage(named: "spiralBG")
         backgroundImageView.contentMode = .scaleAspectFill
@@ -206,7 +211,6 @@ final class RoomLobbyViewController: UIViewController {
         view.addSubview(backgroundImageView)
         view.sendSubviewToBack(backgroundImageView)
         
-        // Add gradient overlay
         gradientLayer.colors = [
             UIColor(red: 5/255, green: 10/255, blue: 35/255, alpha: 1).cgColor,
             UIColor(red: 20/255, green: 45/255, blue: 120/255, alpha: 1).cgColor
@@ -256,7 +260,6 @@ final class RoomLobbyViewController: UIViewController {
     }
     
     private func applyGradients() {
-        // Apply gradient to code container
         codeContainerView.applyGradient(
             colors: [
                 UIColor(red: 5/255, green: 10/255, blue: 35/255, alpha: 1),
@@ -267,7 +270,6 @@ final class RoomLobbyViewController: UIViewController {
             cornerRadius: 20
         )
         
-        // Apply gradient to startButton
         startButton.applyGradient(
             colors: [
                 UIColor(red: 5/255, green: 10/255, blue: 35/255, alpha: 1),
@@ -287,8 +289,14 @@ final class RoomLobbyViewController: UIViewController {
 
     private func observePlayers() {
         playersListener = RoomManager.shared.observePlayers(inRoom: roomCode) { [weak self] players in
-            guard let self = self else { return }
+            guard let self = self, !self.hasLeftLobby else { return }
+            
             self.players = players
+            
+            if let host = players.first(where: { $0.isHost }) {
+                RoomManager.shared.hostID = host.id
+            }
+            
             DispatchQueue.main.async {
                 self.playersCollectionView.reloadData()
                 self.updateStartButtonVisibility()
@@ -297,18 +305,38 @@ final class RoomLobbyViewController: UIViewController {
     }
     
     private func updateStartButtonVisibility() {
-        // Only show start button if current user is the host
         let isHost = players.contains { $0.id == RoomManager.shared.currentUserID && $0.isHost }
         startButton.isHidden = !isHost
     }
 
+    // ✅ FIXED: Only trigger once
     private func observeState() {
-        stateListener = RoomManager.shared.observeState(inRoom: roomCode) { [weak self] round, rumble in
+        stateListener = RoomManager.shared.observeState(inRoom: roomCode) { [weak self] (round: Int, rumble: Int) in
             guard let self = self else { return }
-            Firestore.firestore().collection("rooms").document(self.roomCode).getDocument { snap, _ in
+            
+            // ✅ CRITICAL: Check flag first
+            guard !self.hasLeftLobby else {
+                print("⚠️ hasLeftLobby=true, ignoring state update")
+                return
+            }
+            
+            print("📡 State changed - Round: \(round), Rumble: \(rumble)")
+            
+            // ✅ Set flag IMMEDIATELY before any async work
+            self.hasLeftLobby = true
+            
+            // ✅ Remove listeners IMMEDIATELY
+            self.removeAllListeners()
+            
+            Firestore.firestore().collection("rooms").document(self.roomCode).getDocument { [weak self] snap, _ in
+                guard let self = self else { return }
+                
                 if let data = snap?.data(), let roles = data["roles"] as? [String: String] {
                     RoomManager.shared.cachedRoles = roles
+                    
                     if let myRole = roles[RoomManager.shared.currentUserID] {
+                        print("🎭 My role: \(myRole)")
+                        
                         DispatchQueue.main.async {
                             self.moveToHaptics(roleString: myRole, rumbleCount: rumble)
                         }
@@ -319,50 +347,57 @@ final class RoomLobbyViewController: UIViewController {
     }
 
     @objc private func startGameTapped() {
+        guard !hasLeftLobby else { return }
+        
         guard let host = players.first(where: { $0.isHost }) else {
-            print("No host in players list")
+            print("❌ No host in players list")
             return
         }
 
         if host.id != RoomManager.shared.currentUserID {
-            print("NOT HOST, cannot start")
+            print("❌ NOT HOST, cannot start")
             return
         }
+        
+        startButton.isEnabled = false
+        startButton.alpha = 0.6
 
-        RoomManager.shared.hostAssignRolesAndStartRound(roomCode: roomCode, players: players) { err in
-            if let err = err {
-                print("Failed to start round:", err.localizedDescription)
-            } else {
-                print("Host started round")
+        print("👑 Host starting game...")
+        
+        RoomManager.shared.hostAssignRolesAndStartRound(roomCode: roomCode, players: players) { [weak self] err in
+            DispatchQueue.main.async {
+                if let err = err {
+                    print("❌ Failed to start round: \(err.localizedDescription)")
+                    self?.startButton.isEnabled = true
+                    self?.startButton.alpha = 1.0
+                } else {
+                    print("✅ Host started round successfully")
+                }
             }
         }
     }
 
-    private func moveToHaptics(roleString: String, rumbleCount: Int?) {
-        if navigationController?.topViewController is HapticsRoomViewController { return }
+    private func moveToHaptics(roleString: String, rumbleCount: Int) {
+        // ✅ Check if already navigated
+        if navigationController?.viewControllers.contains(where: { $0 is HapticsRoomViewController }) == true {
+            print("⚠️ HapticsRoomViewController already in stack")
+            return
+        }
 
         let role: HapticsRoomViewController.PlayerRole =
             (roleString == "imposter") ? .imposter : .crewmate
 
-        let r = rumbleCount ?? 0
+        print("🎮 Moving to HapticsRoom - Role: \(roleString), Rumbles: \(rumbleCount)")
 
         let vc = HapticsRoomViewController(
             roomCode: roomCode,
             players: players,
-            rumbleCount: r,
+            rumbleCount: rumbleCount,
             role: role
         )
+        vc.currentRound = 1
 
         navigationController?.pushViewController(vc, animated: true)
-    }
-    
-    @objc private func backTapped() {
-        navigationController?.popViewController(animated: true)
-    }
-    
-    @objc private func settingsTapped() {
-        // Handle settings action
-        print("Settings tapped")
     }
 }
 
@@ -381,10 +416,9 @@ extension RoomLobbyViewController: UICollectionViewDataSource, UICollectionViewD
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        // 3 columns with spacing
-        let totalSpacing: CGFloat = 30 // 2 gaps of 15 between 3 columns
+        let totalSpacing: CGFloat = 30
         let width = (collectionView.bounds.width - totalSpacing) / 3
-        let height = width + 30 // Square avatar + space for name
+        let height = width + 30
         return CGSize(width: width, height: height)
     }
 }
