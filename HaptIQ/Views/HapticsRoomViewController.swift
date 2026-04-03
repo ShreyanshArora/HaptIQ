@@ -1,5 +1,5 @@
 //  HapticsRoomViewController.swift
-//  HaptIQ
+//  HaptIQ anuj
 
 import UIKit
 import FirebaseFirestore
@@ -232,7 +232,7 @@ final class HapticsRoomViewController: UIViewController {
         
         let vc = TapGuessViewController(
             roomCode: roomCode,
-            rumbleCount: sentRumbles,
+            rumbleCount: rumbleCount,
             myRole: role,
             players: players,
             currentRound: currentRound,
