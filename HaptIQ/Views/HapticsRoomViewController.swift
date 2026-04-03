@@ -17,7 +17,6 @@ final class HapticsRoomViewController: UIViewController {
     enum PlayerRole { case crewmate, imposter }
 
     // MARK: - Internal state
-    private var sentRumbles: Int = 0
     private var timer: Timer?
     private var secondsLeft = 10
     private var hasNavigated = false
@@ -178,14 +177,12 @@ final class HapticsRoomViewController: UIViewController {
         updateTimerDisplay()
 
         if role == .crewmate {
-            sentRumbles = rumbleCount
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
                 guard let self = self, !self.hasNavigated else { return }
                 HapticsEngineManager.shared.playCountableRumble(count: self.rumbleCount)
                 print("🔊 Crewmate received \(self.rumbleCount) rumbles")
             }
         } else {
-            sentRumbles = 0
             print("🎭 Imposter: No rumbles")
         }
 
