@@ -423,7 +423,7 @@ final class VotingViewController: UIViewController {
         // Determine result
         var nextScreen: String
         var crewmatesWon: Bool? = nil
-        var eliminatedPlayerID = mostVotedID
+        let eliminatedPlayerID = mostVotedID
         var survivingPlayerIDs = players.map { $0.id }
         
         if mostVotedID == imposterID {
