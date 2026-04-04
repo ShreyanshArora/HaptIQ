@@ -11,6 +11,22 @@
 		E11569102EB5267E00E0B24B /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = E115690F2EB5267E00E0B24B /* FirebaseAnalytics */; };
 		E11569122EB5267E00E0B24B /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = E11569112EB5267E00E0B24B /* FirebaseDatabase */; };
 		E11569142EB5267E00E0B24B /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = E11569132EB5267E00E0B24B /* FirebaseFirestore */; };
+		E1EC59C12F80E19200D0A26D /* FeatureRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC59B42F80E19200D0A26D /* FeatureRow.swift */; };
+		E1EC59C22F80E19200D0A26D /* ContentViewPulse.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC59B92F80E19200D0A26D /* ContentViewPulse.swift */; };
+		E1EC59C32F80E19200D0A26D /* PulseProtocol2_0App.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC59BF2F80E19200D0A26D /* PulseProtocol2_0App.swift */; };
+		E1EC59C42F80E19200D0A26D /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC59BA2F80E19200D0A26D /* GameView.swift */; };
+		E1EC59C52F80E19200D0A26D /* GameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC59AF2F80E19200D0A26D /* GameState.swift */; };
+		E1EC59C62F80E19200D0A26D /* GameScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC59AE2F80E19200D0A26D /* GameScore.swift */; };
+		E1EC59C72F80E19200D0A26D /* HapticEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC59AC2F80E19200D0A26D /* HapticEngine.swift */; };
+		E1EC59C82F80E19200D0A26D /* InputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC59BB2F80E19200D0A26D /* InputView.swift */; };
+		E1EC59C92F80E19200D0A26D /* ContentView2.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC59B72F80E19200D0A26D /* ContentView2.swift */; };
+		E1EC59CA2F80E19200D0A26D /* HapticPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC59B02F80E19200D0A26D /* HapticPattern.swift */; };
+		E1EC59CB2F80E19200D0A26D /* GameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC59AB2F80E19200D0A26D /* GameController.swift */; };
+		E1EC59CC2F80E19200D0A26D /* ColorExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC59B82F80E19200D0A26D /* ColorExtensions.swift */; };
+		E1EC59CD2F80E19200D0A26D /* Tutorial.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC59BD2F80E19200D0A26D /* Tutorial.swift */; };
+		E1EC59CE2F80E19200D0A26D /* ScoreLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC59BC2F80E19200D0A26D /* ScoreLabel.swift */; };
+		E1EC59CF2F80E19200D0A26D /* UserDefaultManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC59B52F80E19200D0A26D /* UserDefaultManager.swift */; };
+		E1EC59D02F80E19200D0A26D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E1EC59B22F80E19200D0A26D /* Preview Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,6 +50,22 @@
 		E115685E2EB1591C00E0B24B /* HaptIQ.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HaptIQ.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E11568742EB1591E00E0B24B /* HaptIQTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HaptIQTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E115687E2EB1591E00E0B24B /* HaptIQUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HaptIQUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1EC59AB2F80E19200D0A26D /* GameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameController.swift; sourceTree = "<group>"; };
+		E1EC59AC2F80E19200D0A26D /* HapticEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticEngine.swift; sourceTree = "<group>"; };
+		E1EC59AE2F80E19200D0A26D /* GameScore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScore.swift; sourceTree = "<group>"; };
+		E1EC59AF2F80E19200D0A26D /* GameState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameState.swift; sourceTree = "<group>"; };
+		E1EC59B02F80E19200D0A26D /* HapticPattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticPattern.swift; sourceTree = "<group>"; };
+		E1EC59B22F80E19200D0A26D /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		E1EC59B42F80E19200D0A26D /* FeatureRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureRow.swift; sourceTree = "<group>"; };
+		E1EC59B52F80E19200D0A26D /* UserDefaultManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultManager.swift; sourceTree = "<group>"; };
+		E1EC59B72F80E19200D0A26D /* ContentView2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView2.swift; sourceTree = "<group>"; };
+		E1EC59B82F80E19200D0A26D /* ColorExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtensions.swift; sourceTree = "<group>"; };
+		E1EC59B92F80E19200D0A26D /* ContentViewPulse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewPulse.swift; sourceTree = "<group>"; };
+		E1EC59BA2F80E19200D0A26D /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
+		E1EC59BB2F80E19200D0A26D /* InputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputView.swift; sourceTree = "<group>"; };
+		E1EC59BC2F80E19200D0A26D /* ScoreLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreLabel.swift; sourceTree = "<group>"; };
+		E1EC59BD2F80E19200D0A26D /* Tutorial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tutorial.swift; sourceTree = "<group>"; };
+		E1EC59BF2F80E19200D0A26D /* PulseProtocol2_0App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PulseProtocol2_0App.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -121,6 +153,7 @@
 				E11568772EB1591E00E0B24B /* HaptIQTests */,
 				E11568812EB1591E00E0B24B /* HaptIQUITests */,
 				E115685F2EB1591C00E0B24B /* Products */,
+				E1EC59C02F80E19200D0A26D /* PulseProtocol2 2.0 */,
 			);
 			sourceTree = "<group>";
 		};
@@ -132,6 +165,69 @@
 				E115687E2EB1591E00E0B24B /* HaptIQUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		E1EC59AD2F80E19200D0A26D /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				E1EC59AB2F80E19200D0A26D /* GameController.swift */,
+				E1EC59AC2F80E19200D0A26D /* HapticEngine.swift */,
+			);
+			path = Controllers;
+			sourceTree = "<group>";
+		};
+		E1EC59B12F80E19200D0A26D /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				E1EC59AE2F80E19200D0A26D /* GameScore.swift */,
+				E1EC59AF2F80E19200D0A26D /* GameState.swift */,
+				E1EC59B02F80E19200D0A26D /* HapticPattern.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		E1EC59B32F80E19200D0A26D /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				E1EC59B22F80E19200D0A26D /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		E1EC59B62F80E19200D0A26D /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				E1EC59B42F80E19200D0A26D /* FeatureRow.swift */,
+				E1EC59B52F80E19200D0A26D /* UserDefaultManager.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		E1EC59BE2F80E19200D0A26D /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				E1EC59B72F80E19200D0A26D /* ContentView2.swift */,
+				E1EC59B82F80E19200D0A26D /* ColorExtensions.swift */,
+				E1EC59B92F80E19200D0A26D /* ContentViewPulse.swift */,
+				E1EC59BA2F80E19200D0A26D /* GameView.swift */,
+				E1EC59BB2F80E19200D0A26D /* InputView.swift */,
+				E1EC59BC2F80E19200D0A26D /* ScoreLabel.swift */,
+				E1EC59BD2F80E19200D0A26D /* Tutorial.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		E1EC59C02F80E19200D0A26D /* PulseProtocol2 2.0 */ = {
+			isa = PBXGroup;
+			children = (
+				E1EC59AD2F80E19200D0A26D /* Controllers */,
+				E1EC59B12F80E19200D0A26D /* Models */,
+				E1EC59B32F80E19200D0A26D /* Preview Content */,
+				E1EC59B62F80E19200D0A26D /* Utilities */,
+				E1EC59BE2F80E19200D0A26D /* Views */,
+				E1EC59BF2F80E19200D0A26D /* PulseProtocol2_0App.swift */,
+			);
+			path = "PulseProtocol2 2.0";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -262,6 +358,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1EC59D02F80E19200D0A26D /* Preview Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -286,6 +383,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1EC59C12F80E19200D0A26D /* FeatureRow.swift in Sources */,
+				E1EC59C22F80E19200D0A26D /* ContentViewPulse.swift in Sources */,
+				E1EC59C32F80E19200D0A26D /* PulseProtocol2_0App.swift in Sources */,
+				E1EC59C42F80E19200D0A26D /* GameView.swift in Sources */,
+				E1EC59C52F80E19200D0A26D /* GameState.swift in Sources */,
+				E1EC59C62F80E19200D0A26D /* GameScore.swift in Sources */,
+				E1EC59C72F80E19200D0A26D /* HapticEngine.swift in Sources */,
+				E1EC59C82F80E19200D0A26D /* InputView.swift in Sources */,
+				E1EC59C92F80E19200D0A26D /* ContentView2.swift in Sources */,
+				E1EC59CA2F80E19200D0A26D /* HapticPattern.swift in Sources */,
+				E1EC59CB2F80E19200D0A26D /* GameController.swift in Sources */,
+				E1EC59CC2F80E19200D0A26D /* ColorExtensions.swift in Sources */,
+				E1EC59CD2F80E19200D0A26D /* Tutorial.swift in Sources */,
+				E1EC59CE2F80E19200D0A26D /* ScoreLabel.swift in Sources */,
+				E1EC59CF2F80E19200D0A26D /* UserDefaultManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
