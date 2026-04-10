@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ContentView2: View {
+    @Environment(\.dismiss) private var dismiss
     @State private var showTutorial = false
     @State private var navigateToGame = false
     
@@ -113,6 +114,33 @@ struct ContentView2: View {
                     
                     Spacer()
                         .frame(height: 50)
+                }
+                
+                // Back button overlay
+                VStack {
+                    HStack {
+                        Button(action: {
+                            dismiss()
+                        }) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(width: 44, height: 44)
+                                .background(
+                                    Circle()
+                                        .fill(Color.white.opacity(0.15))
+                                        .overlay(
+                                            Circle()
+                                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                                        )
+                                )
+                        }
+                        .padding(.leading, 20)
+                        .padding(.top, 50)
+                        
+                        Spacer()
+                    }
+                    Spacer()
                 }
             }
             .navigationDestination(isPresented: $showTutorial) {
