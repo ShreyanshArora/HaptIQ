@@ -438,15 +438,20 @@ final class VotingViewController: UIViewController {
             survivingPlayerIDs = players.map { $0.id }.filter { $0 != mostVotedID }
             let crewmatesRemaining = survivingPlayerIDs.filter { $0 != imposterID }.count
             
-            if crewmatesRemaining <= 1 {
-                // Imposter wins
-                print("👑 [HOST] → RESULT (Imposter wins - only \(crewmatesRemaining) crewmate left)")
+            if crewmatesRemaining < 1 {
+                // Imposter wins — no crewmates left
+                print("👑 [HOST] → RESULT (Imposter wins - 0 crewmates left)")
+                nextScreen = "result"
+                crewmatesWon = false
+            } else if survivingPlayerIDs.count <= 1 {
+                // Failsafe: only 1 player left overall
+                print("👑 [HOST] → RESULT (Only 1 player left)")
                 nextScreen = "result"
                 crewmatesWon = false
             } else {
-                // Continue to next haptics round
-                print("👑 [HOST] → HAPTICS (Continue with \(survivingPlayerIDs.count) players)")
-                nextScreen = "haptics"
+                // Continue to next haptics round BUT show wrong elimination screen first
+                print("👑 [HOST] → WRONG ELIMINATION (Continue with \(survivingPlayerIDs.count) players)")
+                nextScreen = "wrong_elimination"
             }
         }
         
@@ -613,6 +618,16 @@ final class VotingViewController: UIViewController {
             let survivingPlayers = players.filter { survivingPlayerIDs.contains($0.id) }
             navigateToHaptics(round: round, rumbleCount: rumbleCount, players: survivingPlayers)
             
+        case "wrong_elimination":
+            let survivingPlayers = players.filter { survivingPlayerIDs.contains($0.id) }
+            navigateToWrongElimination(
+                eliminatedName: eliminatedName,
+                eliminatedAvatar: eliminatedAvatar,
+                survivingPlayers: survivingPlayers,
+                nextRound: round,
+                nextRumbleCount: rumbleCount
+            )
+            
         default:
             print("⚠️ Unknown screen: \(screen)")
         }
@@ -640,6 +655,20 @@ final class VotingViewController: UIViewController {
             role: myRole
         )
         vc.currentRound = round
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    private func navigateToWrongElimination(eliminatedName: String, eliminatedAvatar: String, survivingPlayers: [RoomManager.Player], nextRound: Int, nextRumbleCount: Int) {
+        let vc = GameResultViewController(
+            crewmatesWon: false, // Ignored
+            roomCode: roomCode,
+            eliminatedPlayerName: eliminatedName,
+            eliminatedAvatarImage: eliminatedAvatar,
+            isWrongElimination: true,
+            survivingPlayers: survivingPlayers,
+            nextRound: nextRound,
+            nextRumbleCount: nextRumbleCount
+        )
         navigationController?.pushViewController(vc, animated: true)
     }
     

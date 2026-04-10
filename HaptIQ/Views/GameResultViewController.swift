@@ -64,6 +64,17 @@ final class GameResultViewController: UIViewController {
         return v
     }()
     
+    private let topTitleLabel: UILabel = {
+        let l = UILabel()
+        l.font = UIFont(name: "Aclonica-Regular", size: 30)
+        l.textColor = .white
+        l.textAlignment = .center
+        l.numberOfLines = 2
+        l.translatesAutoresizingMaskIntoConstraints = false
+        l.isHidden = true
+        return l
+    }()
+    
     private let resultLabel: UILabel = {
         let l = UILabel()
         l.font = UIFont(name: "Aclonica-Regular", size: 32)
@@ -217,7 +228,7 @@ final class GameResultViewController: UIViewController {
         
         if isWrongElimination {
             applyGradientToContinueButton()
-            drawRedGlowCircle()
+            drawBlueGlowCircle()
         }
     }
     
@@ -515,6 +526,7 @@ final class GameResultViewController: UIViewController {
         view.backgroundColor = UIColor(red: 10/255, green: 20/255, blue: 45/255, alpha: 1)
         
         view.addSubview(bgImage)
+        view.addSubview(topTitleLabel)
         view.addSubview(glowCircleView)
         view.addSubview(largeAvatarView)
         view.addSubview(resultLabel)
@@ -522,6 +534,7 @@ final class GameResultViewController: UIViewController {
         view.addSubview(continueButton)
         
         // Show wrong elimination UI elements
+        topTitleLabel.isHidden = false
         glowCircleView.isHidden = false
         largeAvatarView.isHidden = false
         continueButton.isHidden = false
@@ -543,24 +556,29 @@ final class GameResultViewController: UIViewController {
             bgImage.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bgImage.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             
-            // Red glow circle (behind avatar)
+            // Top Title
+            topTitleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
+            topTitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            topTitleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            // Blue glow circle (behind avatar)
             glowCircleView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            glowCircleView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -80),
-            glowCircleView.widthAnchor.constraint(equalToConstant: 300),
-            glowCircleView.heightAnchor.constraint(equalToConstant: 300),
+            glowCircleView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -20),
+            glowCircleView.widthAnchor.constraint(equalToConstant: 280),
+            glowCircleView.heightAnchor.constraint(equalToConstant: 280),
             
             // Large avatar (centered)
             largeAvatarView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            largeAvatarView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -80),
+            largeAvatarView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -20),
             largeAvatarView.widthAnchor.constraint(equalToConstant: 220),
             largeAvatarView.heightAnchor.constraint(equalToConstant: 220),
             
-            // Title "IT WASN'T [NAME]"
-            resultLabel.topAnchor.constraint(equalTo: largeAvatarView.bottomAnchor, constant: 30),
+            // Title "[NAME] GOT BUSTED"
+            resultLabel.topAnchor.constraint(equalTo: largeAvatarView.bottomAnchor, constant: 40),
             resultLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
             resultLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
             
-            // Subtitle "The Imposter is still among you"
+            // Subtitle "Wait for the final results..."
             subtitleLabel.topAnchor.constraint(equalTo: resultLabel.bottomAnchor, constant: 12),
             subtitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
             subtitleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40),
@@ -579,17 +597,19 @@ final class GameResultViewController: UIViewController {
         // Set avatar image of eliminated player
         largeAvatarView.image = UIImage(named: eliminatedAvatarImage) ?? UIImage(named: "char1")
         
-        // "IT WASN'T [NAME]"
-        resultLabel.text = "IT WASN'T \(eliminatedPlayerName.uppercased())"
+        topTitleLabel.text = "The group has\nmade a choice"
+        
+        // "[NAME] GOT BUSTED"
+        resultLabel.text = "\(eliminatedPlayerName.uppercased()) GOT BUSTED"
         resultLabel.textColor = .white
         resultLabel.font = UIFont(name: "Aclonica-Regular", size: 28)
         
         // Subtitle
-        subtitleLabel.text = "The Imposter is still among you"
+        subtitleLabel.text = "Wait for the final results..."
         subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.8)
     }
     
-    private func drawRedGlowCircle() {
+    private func drawBlueGlowCircle() {
         // Remove existing layers
         glowCircleView.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
         
@@ -599,11 +619,11 @@ final class GameResultViewController: UIViewController {
         
         circleLayer.path = UIBezierPath(arcCenter: center, radius: radius, startAngle: 0, endAngle: .pi * 2, clockwise: true).cgPath
         circleLayer.fillColor = UIColor.clear.cgColor
-        circleLayer.strokeColor = UIColor(red: 255/255, green: 50/255, blue: 50/255, alpha: 0.8).cgColor
+        circleLayer.strokeColor = UIColor(red: 0/255, green: 200/255, blue: 255/255, alpha: 0.8).cgColor
         circleLayer.lineWidth = 4
         
         // Add glow effect
-        circleLayer.shadowColor = UIColor.red.cgColor
+        circleLayer.shadowColor = UIColor(red: 0/255, green: 200/255, blue: 255/255, alpha: 1).cgColor
         circleLayer.shadowRadius = 15
         circleLayer.shadowOpacity = 0.8
         circleLayer.shadowOffset = .zero
@@ -615,7 +635,7 @@ final class GameResultViewController: UIViewController {
     }
     
     private func addLightningEffect() {
-        let lightningColor = UIColor(red: 255/255, green: 50/255, blue: 50/255, alpha: 0.6).cgColor
+        let lightningColor = UIColor(red: 0/255, green: 200/255, blue: 255/255, alpha: 0.6).cgColor
         
         // Left lightning
         let leftPath = UIBezierPath()
@@ -633,10 +653,10 @@ final class GameResultViewController: UIViewController {
         
         // Right lightning
         let rightPath = UIBezierPath()
-        rightPath.move(to: CGPoint(x: 280, y: 150))
-        rightPath.addLine(to: CGPoint(x: 300, y: 140))
-        rightPath.addLine(to: CGPoint(x: 285, y: 130))
-        rightPath.addLine(to: CGPoint(x: 310, y: 110))
+        rightPath.move(to: CGPoint(x: 260, y: 150))
+        rightPath.addLine(to: CGPoint(x: 280, y: 140))
+        rightPath.addLine(to: CGPoint(x: 265, y: 130))
+        rightPath.addLine(to: CGPoint(x: 290, y: 110))
         
         let rightLayer = CAShapeLayer()
         rightLayer.path = rightPath.cgPath
@@ -651,8 +671,8 @@ final class GameResultViewController: UIViewController {
         
         let gradientLayer = CAGradientLayer()
         gradientLayer.colors = [
-            UIColor(red: 60/255, green: 100/255, blue: 160/255, alpha: 1).cgColor,
-            UIColor(red: 40/255, green: 70/255, blue: 120/255, alpha: 1).cgColor
+            UIColor(red: 10/255, green: 20/255, blue: 40/255, alpha: 1).cgColor,
+            UIColor(red: 50/255, green: 150/255, blue: 255/255, alpha: 1).cgColor
         ]
         gradientLayer.startPoint = CGPoint(x: 0, y: 0.5)
         gradientLayer.endPoint = CGPoint(x: 1, y: 0.5)
