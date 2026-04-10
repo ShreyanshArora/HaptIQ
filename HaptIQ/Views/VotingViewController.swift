@@ -6,7 +6,7 @@
 import UIKit
 import FirebaseFirestore
 
-// MARK: - Vote Player Cell (Similar to PlayerCell but with selection state)
+// MARK: - Vote Player Cell
 class VotePlayerCell: UICollectionViewCell {
     
     private let containerView: UIView = {
@@ -103,14 +103,12 @@ class VotePlayerCell: UICollectionViewCell {
     func configure(with player: RoomManager.Player, isSelected: Bool) {
         nameLabel.text = player.name
         
-        // Set avatar image
         if let avatarImage = player.avatarImage {
             avatarImageView.image = UIImage(named: avatarImage)
         } else {
             avatarImageView.image = UIImage(named: "char1")
         }
         
-        // Update selection state
         setSelected(isSelected)
     }
     
@@ -135,10 +133,14 @@ final class VotingViewController: UIViewController {
     private var players: [RoomManager.Player]
     private var selectedPlayerID: String?
     private let currentRound: Int
-    private var hasVoted = false  // 🔧 Prevent duplicate votes
+    
+    private var hasVoted = false
+    private var hasNavigated = false
+    private var waitingForResultsSince: TimeInterval = 0
     
     private let db = Firestore.firestore()
     private var voteListener: ListenerRegistration?
+    private var gameStateListener: ListenerRegistration?
     private let gradientLayer = CAGradientLayer()
 
     // UI Components
@@ -197,8 +199,15 @@ final class VotingViewController: UIViewController {
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     
     deinit {
-        voteListener?.remove()
+        cleanup()
         print("🗑️ VotingViewController deallocated")
+    }
+    
+    private func cleanup() {
+        voteListener?.remove()
+        voteListener = nil
+        gameStateListener?.remove()
+        gameStateListener = nil
     }
 
     override func viewDidLoad() {
@@ -207,7 +216,13 @@ final class VotingViewController: UIViewController {
         setupCollectionView()
         navigationItem.hidesBackButton = true
         
-        print("🗳 Voting screen loaded - \(players.count) players")
+        print("🗳 Voting screen loaded - \(players.count) players, Round \(currentRound)")
+        print("👑 Am I host? \(RoomManager.shared.isHost)")
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        cleanup()
     }
     
     override func viewDidLayoutSubviews() {
@@ -219,7 +234,6 @@ final class VotingViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = .black
         
-        // Add background image
         let backgroundImageView = UIImageView(frame: view.bounds)
         backgroundImageView.image = UIImage(named: "spiralBG")
         backgroundImageView.contentMode = .scaleAspectFill
@@ -228,7 +242,6 @@ final class VotingViewController: UIViewController {
         view.addSubview(backgroundImageView)
         view.sendSubviewToBack(backgroundImageView)
         
-        // Add gradient overlay
         gradientLayer.colors = [
             UIColor(red: 6/255, green: 27/255, blue: 53/255, alpha: 0.6).cgColor,
             UIColor(red: 18/255, green: 57/255, blue: 99/255, alpha: 0.6).cgColor
@@ -265,7 +278,6 @@ final class VotingViewController: UIViewController {
     }
     
     private func applyGradients() {
-        // Apply gradient to vote button
         voteButton.applyGradient(
             colors: [
                 UIColor(red: 255/255, green: 72/255, blue: 72/255, alpha: 1),
@@ -283,25 +295,23 @@ final class VotingViewController: UIViewController {
         playersCollectionView.register(VotePlayerCell.self, forCellWithReuseIdentifier: "VotePlayerCell")
     }
     
+    // MARK: - Cast Vote
     @objc private func castVote() {
         guard let selected = selectedPlayerID else { return }
-        guard !hasVoted else {
-            print("⚠️ Already voted")
-            return
-        }
+        guard !hasVoted else { return }
+        
+        hasVoted = true
+        waitingForResultsSince = Date().timeIntervalSince1970
         
         let myID = RoomManager.shared.currentUserID
-        hasVoted = true
         
-        // Disable interactions immediately
         voteButton.isEnabled = false
         voteButton.alpha = 0.5
         voteButton.setTitle("VOTE CAST", for: .normal)
         playersCollectionView.isUserInteractionEnabled = false
         
-        print("🗳 Casting vote for: \(selected.prefix(4))")
+        print("🗳 Casting vote for: \(String(selected.prefix(8)))")
         
-        // Store vote in Firestore
         db.collection("rooms")
             .document(roomCode)
             .collection("votes")
@@ -309,158 +319,381 @@ final class VotingViewController: UIViewController {
             .setData([
                 "voterID": myID,
                 "votedFor": selected,
+                "round": currentRound,
                 "timestamp": FieldValue.serverTimestamp()
-            ]) { error in
+            ]) { [weak self] error in
+                guard let self = self else { return }
+                
                 if let error = error {
-                    print("❌ Vote error:", error)
-                    self.hasVoted = false  // Allow retry
+                    print("❌ Vote error: \(error)")
+                    self.hasVoted = false
                     self.voteButton.isEnabled = true
                     self.voteButton.alpha = 1.0
+                    self.voteButton.setTitle("CAST VOTE", for: .normal)
                     self.playersCollectionView.isUserInteractionEnabled = true
                     return
                 }
                 
-                print("✅ Vote successfully cast")
+                print("✅ Vote cast successfully")
                 
-                // Listen for all votes
-                self.listenForAllVotes()
+                if RoomManager.shared.isHost {
+                    // ✅ HOST: Listen for all votes, then evaluate
+                    self.hostListenForAllVotes()
+                } else {
+                    // ✅ NON-HOST: Listen for voteResult from host
+                    self.nonHostListenForVoteResult()
+                }
             }
     }
     
-    private func listenForAllVotes() {
+    // ════════════════════════════════════════════════════════════════════
+    // MARK: - HOST ONLY: Listen for all votes and evaluate
+    // ════════════════════════════════════════════════════════════════════
+    
+    private func hostListenForAllVotes() {
+        guard RoomManager.shared.isHost else { return }
+        
+        print("👑 [HOST] Listening for all votes...")
+        
         voteListener?.remove()
         voteListener = db.collection("rooms")
             .document(roomCode)
             .collection("votes")
-            .addSnapshotListener { [weak self] snap, error in
+            .whereField("round", isEqualTo: currentRound)
+            .addSnapshotListener { [weak self] snapshot, error in
                 guard let self = self else { return }
-                guard let docs = snap?.documents else { return }
+                guard RoomManager.shared.isHost else { return }
+                guard !self.hasNavigated else { return }
                 
-                print("📊 Votes received: \(docs.count)/\(self.players.count)")
+                if let error = error {
+                    print("❌ [HOST] Vote listener error: \(error)")
+                    return
+                }
                 
-                // Check if everyone has voted
-                if docs.count >= self.players.count {
-                    self.voteListener?.remove()  // Stop listening
-                    self.evaluateVotes(docs.map { $0.data() })
+                guard let documents = snapshot?.documents else { return }
+                
+                print("👑 [HOST] Votes: \(documents.count)/\(self.players.count)")
+                
+                if documents.count >= self.players.count {
+                    print("👑 [HOST] All votes received!")
+                    
+                    self.voteListener?.remove()
+                    self.voteListener = nil
+                    
+                    let allVotes = documents.map { $0.data() }
+                    self.hostEvaluateVotesAndWriteResult(allVotes)
                 }
             }
     }
     
-    private func evaluateVotes(_ votes: [[String: Any]]) {
-        print("\n🗳 === EVALUATING VOTES ===")
+    private func hostEvaluateVotesAndWriteResult(_ votes: [[String: Any]]) {
+        guard RoomManager.shared.isHost else { return }
+        guard !hasNavigated else { return }
         
-        // Count votes for each player
+        print("\n👑 [HOST] === EVALUATING VOTES ===")
+        
+        // Count votes
         var voteCounts: [String: Int] = [:]
-        
         for vote in votes {
             if let votedFor = vote["votedFor"] as? String {
                 voteCounts[votedFor, default: 0] += 1
-                print("📊 Vote for: \(votedFor.prefix(4))")
+                print("👑 [HOST] Vote for: \(String(votedFor.prefix(8)))")
             }
         }
         
-        // Find player with most votes
+        // Find most voted
         guard let mostVotedID = voteCounts.max(by: { $0.value < $1.value })?.key else {
-            print("❌ No votes found")
+            print("❌ [HOST] No votes found")
             return
         }
         
         let voteCount = voteCounts[mostVotedID] ?? 0
-        print("🎯 Most voted: \(mostVotedID.prefix(4)) with \(voteCount) votes")
+        print("👑 [HOST] Most voted: \(String(mostVotedID.prefix(8))) with \(voteCount) votes")
         
-        // Check if voted player is imposter
+        // Find imposter
         var imposterID = ""
         for (id, role) in RoomManager.shared.cachedRoles {
             if role == "imposter" {
                 imposterID = id
-                print("🎭 Imposter ID: \(id.prefix(4))")
+                break
             }
         }
+        print("👑 [HOST] Imposter: \(String(imposterID.prefix(8)))")
         
-        // Clear votes for next phase
-        clearVotes()
+        // Determine result
+        var nextScreen: String
+        var crewmatesWon: Bool? = nil
+        let eliminatedPlayerID = mostVotedID
+        var survivingPlayerIDs = players.map { $0.id }
         
         if mostVotedID == imposterID {
-            // ✅ CREWMATES WIN - Found the imposter!
-            print("🎉 CREWMATES WIN - Imposter voted out!")
-            DispatchQueue.main.async {
-                self.showGameResult(crewmatesWon: true)
-            }
+            // ✅ Crewmates win!
+            print("👑 [HOST] Decision: → RESULT (Crewmates win - Imposter voted out!)")
+            nextScreen = "result"
+            crewmatesWon = true
         } else {
             // ❌ Wrong person voted out
-            print("❌ Wrong person voted out: \(mostVotedID.prefix(4))")
+            print("👑 [HOST] Decision: Wrong person voted out")
             
-            // Remove voted player from players array
-            players.removeAll { $0.id == mostVotedID }
-            print("👥 Remaining players: \(players.count)")
+            survivingPlayerIDs = players.map { $0.id }.filter { $0 != mostVotedID }
+            let crewmatesRemaining = survivingPlayerIDs.filter { $0 != imposterID }.count
             
-            let myID = RoomManager.shared.currentUserID
-            
-            if myID == mostVotedID {
-                // I was voted out - Go to spectator
-                print("💀 I was voted out → Spectator")
-                DispatchQueue.main.async {
-                    self.navigationController?.pushViewController(
-                        SpectatorViewController(),
-                        animated: true
-                    )
-                }
-            } else if myID == imposterID && players.count == 1 {
-                // Only 1 crewmate left and I'm imposter - IMPOSTER WINS
-                print("🏆 IMPOSTER WINS - Only 1 crewmate left!")
-                DispatchQueue.main.async {
-                    self.showGameResult(crewmatesWon: false)
-                }
+            if crewmatesRemaining < 1 {
+                // Imposter wins — no crewmates left
+                print("👑 [HOST] → RESULT (Imposter wins - 0 crewmates left)")
+                nextScreen = "result"
+                crewmatesWon = false
+            } else if survivingPlayerIDs.count <= 1 {
+                // Failsafe: only 1 player left overall
+                print("👑 [HOST] → RESULT (Only 1 player left)")
+                nextScreen = "result"
+                crewmatesWon = false
             } else {
-                // Continue game with remaining players
-                print("➡️ Continuing to next round")
-                DispatchQueue.main.async {
-                    self.continueNextRound()
-                }
+                // Continue to next haptics round BUT show wrong elimination screen first
+                print("👑 [HOST] → WRONG ELIMINATION (Continue with \(survivingPlayerIDs.count) players)")
+                nextScreen = "wrong_elimination"
             }
         }
         
-        print("=== END VOTE EVALUATION ===\n")
+        // Get eliminated player info
+        let eliminatedPlayer = players.first(where: { $0.id == eliminatedPlayerID })
+        let eliminatedName = eliminatedPlayer?.name ?? ""
+        let eliminatedAvatar = eliminatedPlayer?.avatarImage ?? "char1"
+        
+        // ✅ Write vote result to Firestore
+        let voteResultData: [String: Any] = [
+            "screen": nextScreen,
+            "round": currentRound + 1,
+            "rumbleCount": Int.random(in: 2...5),
+            "survivingPlayerIDs": survivingPlayerIDs,
+            "eliminatedPlayerID": eliminatedPlayerID,
+            "eliminatedPlayerName": eliminatedName,
+            "eliminatedAvatarImage": eliminatedAvatar,
+            "crewmatesWon": crewmatesWon as Any,
+            "forVotingRound": currentRound,
+            "timestamp": FieldValue.serverTimestamp()
+        ]
+        
+        print("👑 [HOST] Writing voteResult: screen=\(nextScreen)")
+        
+        db.collection("rooms")
+            .document(roomCode)
+            .updateData(["voteResult": voteResultData]) { [weak self] error in
+                guard let self = self else { return }
+                
+                if let error = error {
+                    print("❌ [HOST] Failed to write voteResult: \(error)")
+                    return
+                }
+                
+                print("✅ [HOST] voteResult written successfully")
+                
+                // Clear votes
+                self.clearVotes()
+                
+                // Host navigates
+                DispatchQueue.main.async {
+                    self.navigateBasedOnResult(
+                        screen: nextScreen,
+                        round: self.currentRound + 1,
+                        rumbleCount: voteResultData["rumbleCount"] as? Int ?? 3,
+                        survivingPlayerIDs: survivingPlayerIDs,
+                        eliminatedPlayerID: eliminatedPlayerID,
+                        crewmatesWon: crewmatesWon,
+                        eliminatedName: eliminatedName,
+                        eliminatedAvatar: eliminatedAvatar
+                    )
+                }
+            }
     }
     
-    private func continueNextRound() {
-        let nextRumble = Int.random(in: 2...5)
+    // ════════════════════════════════════════════════════════════════════
+    // MARK: - NON-HOST: Listen for vote result from host
+    // ════════════════════════════════════��═══════════════════════════════
+    
+    private func nonHostListenForVoteResult() {
+        guard !RoomManager.shared.isHost else { return }
+        
+        print("👂 [NON-HOST] Listening for voteResult...")
+        
+        gameStateListener?.remove()
+        gameStateListener = db.collection("rooms")
+            .document(roomCode)
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let self = self else { return }
+                guard !self.hasNavigated else { return }
+                
+                if let error = error {
+                    print("❌ [NON-HOST] Listener error: \(error)")
+                    return
+                }
+                
+                guard let data = snapshot?.data(),
+                      let voteResult = data["voteResult"] as? [String: Any] else {
+                    return
+                }
+                
+                // Check if this is for our voting round
+                let forVotingRound = voteResult["forVotingRound"] as? Int ?? 0
+                guard forVotingRound == self.currentRound else {
+                    print("👂 [NON-HOST] Ignoring voteResult for round \(forVotingRound), we're on \(self.currentRound)")
+                    return
+                }
+                
+                // Check timestamp
+                if let timestamp = voteResult["timestamp"] as? Timestamp {
+                    let resultTime = timestamp.dateValue().timeIntervalSince1970
+                    guard resultTime > self.waitingForResultsSince else {
+                        print("👂 [NON-HOST] Ignoring old voteResult")
+                        return
+                    }
+                }
+                
+                let screen = voteResult["screen"] as? String ?? ""
+                let round = voteResult["round"] as? Int ?? self.currentRound + 1
+                let rumbleCount = voteResult["rumbleCount"] as? Int ?? 3
+                let survivingPlayerIDs = voteResult["survivingPlayerIDs"] as? [String] ?? []
+                let eliminatedPlayerID = voteResult["eliminatedPlayerID"] as? String ?? ""
+                let crewmatesWon = voteResult["crewmatesWon"] as? Bool
+                let eliminatedName = voteResult["eliminatedPlayerName"] as? String ?? ""
+                let eliminatedAvatar = voteResult["eliminatedAvatarImage"] as? String ?? "char1"
+                
+                print("📡 [NON-HOST] Received voteResult: screen=\(screen)")
+                
+                self.gameStateListener?.remove()
+                self.gameStateListener = nil
+                
+                DispatchQueue.main.async {
+                    self.navigateBasedOnResult(
+                        screen: screen,
+                        round: round,
+                        rumbleCount: rumbleCount,
+                        survivingPlayerIDs: survivingPlayerIDs,
+                        eliminatedPlayerID: eliminatedPlayerID,
+                        crewmatesWon: crewmatesWon,
+                        eliminatedName: eliminatedName,
+                        eliminatedAvatar: eliminatedAvatar
+                    )
+                }
+            }
+    }
+    
+    // ════════════════════════════════════════════════════════════════════
+    // MARK: - Navigation
+    // ════════════════════════════════════════════════════════════════════
+    
+    private func navigateBasedOnResult(screen: String,
+                                        round: Int,
+                                        rumbleCount: Int,
+                                        survivingPlayerIDs: [String],
+                                        eliminatedPlayerID: String,
+                                        crewmatesWon: Bool?,
+                                        eliminatedName: String,
+                                        eliminatedAvatar: String) {
+        guard !hasNavigated else { return }
+        hasNavigated = true
+        
+        cleanup()
+        
+        let myID = RoomManager.shared.currentUserID
+        
+        // Check if I was voted out
+        if eliminatedPlayerID == myID {
+            print("💀 I was voted out → Spectator")
+            navigateToSpectator()
+            return
+        }
+        
+        print("🔄 Navigating to: \(screen)")
+        
+        switch screen {
+        case "result":
+            navigateToGameResult(
+                crewmatesWon: crewmatesWon ?? false,
+                eliminatedName: eliminatedName,
+                eliminatedAvatar: eliminatedAvatar
+            )
+            
+        case "haptics":
+            let survivingPlayers = players.filter { survivingPlayerIDs.contains($0.id) }
+            navigateToHaptics(round: round, rumbleCount: rumbleCount, players: survivingPlayers)
+            
+        case "wrong_elimination":
+            let survivingPlayers = players.filter { survivingPlayerIDs.contains($0.id) }
+            navigateToWrongElimination(
+                eliminatedName: eliminatedName,
+                eliminatedAvatar: eliminatedAvatar,
+                survivingPlayers: survivingPlayers,
+                nextRound: round,
+                nextRumbleCount: rumbleCount
+            )
+            
+        default:
+            print("⚠️ Unknown screen: \(screen)")
+        }
+    }
+    
+    private func navigateToGameResult(crewmatesWon: Bool, eliminatedName: String, eliminatedAvatar: String) {
+        let vc = GameResultViewController(
+            crewmatesWon: crewmatesWon,
+            roomCode: roomCode,
+            eliminatedPlayerName: eliminatedName,
+            eliminatedAvatarImage: eliminatedAvatar
+        )
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    private func navigateToHaptics(round: Int, rumbleCount: Int, players: [RoomManager.Player]) {
         let myID = RoomManager.shared.currentUserID
         let myRole: HapticsRoomViewController.PlayerRole =
             (RoomManager.shared.cachedRoles[myID] == "imposter") ? .imposter : .crewmate
         
-        print("🎮 Next round: \(currentRound + 1), Rumbles: \(nextRumble), Players: \(players.count)")
-        
         let vc = HapticsRoomViewController(
             roomCode: roomCode,
             players: players,
-            rumbleCount: nextRumble,
+            rumbleCount: rumbleCount,
             role: myRole
         )
-        vc.currentRound = currentRound + 1
+        vc.currentRound = round
         navigationController?.pushViewController(vc, animated: true)
     }
     
-    private func showGameResult(crewmatesWon: Bool) {
-        let vc = GameResultViewController(crewmatesWon: crewmatesWon, roomCode: roomCode)
+    private func navigateToWrongElimination(eliminatedName: String, eliminatedAvatar: String, survivingPlayers: [RoomManager.Player], nextRound: Int, nextRumbleCount: Int) {
+        let vc = GameResultViewController(
+            crewmatesWon: false, // Ignored
+            roomCode: roomCode,
+            eliminatedPlayerName: eliminatedName,
+            eliminatedAvatarImage: eliminatedAvatar,
+            isWrongElimination: true,
+            survivingPlayers: survivingPlayers,
+            nextRound: nextRound,
+            nextRumbleCount: nextRumbleCount
+        )
         navigationController?.pushViewController(vc, animated: true)
     }
     
+    private func navigateToSpectator() {
+        let vc = SpectatorViewController()
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    // MARK: - Cleanup
     private func clearVotes() {
         db.collection("rooms")
             .document(roomCode)
             .collection("votes")
-            .getDocuments { snap, _ in
-                guard let docs = snap?.documents else { return }
+            .whereField("round", isEqualTo: currentRound)
+            .getDocuments { [weak self] snapshot, _ in
+                guard let documents = snapshot?.documents, !documents.isEmpty else { return }
+                guard let self = self else { return }
+                
                 let batch = self.db.batch()
-                for doc in docs {
+                for doc in documents {
                     batch.deleteDocument(doc.reference)
                 }
                 batch.commit { error in
-                    if let error = error {
-                        print("❌ Error clearing votes: \(error)")
-                    } else {
-                        print("🧹 Cleared \(docs.count) votes")
+                    if error == nil {
+                        print("🧹 Cleared \(documents.count) votes")
                     }
                 }
             }
@@ -483,23 +716,19 @@ extension VotingViewController: UICollectionViewDataSource, UICollectionViewDele
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        // 3 columns with spacing
-        let totalSpacing: CGFloat = 30 // 2 gaps of 15 between 3 columns
+        let totalSpacing: CGFloat = 30
         let width = (collectionView.bounds.width - totalSpacing) / 3
-        let height = width + 30 // Square avatar + space for name
+        let height = width + 30
         return CGSize(width: width, height: height)
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        guard !hasVoted else {
-            print("⚠️ Already voted, can't change selection")
-            return
-        }
+        guard !hasVoted else { return }
         
         let selectedPlayer = players[indexPath.item]
         let myID = RoomManager.shared.currentUserID
         
-        // Prevent voting for yourself
+        // Can't vote for yourself
         if selectedPlayer.id == myID {
             let alert = UIAlertController(
                 title: "Invalid Vote",
@@ -511,15 +740,12 @@ extension VotingViewController: UICollectionViewDataSource, UICollectionViewDele
             return
         }
         
-        // Update selection
         selectedPlayerID = selectedPlayer.id
-        print("👆 Selected: \(selectedPlayer.name) (\(selectedPlayer.id.prefix(4)))")
+        print("👆 Selected: \(selectedPlayer.name)")
         
-        // Enable vote button
         voteButton.isEnabled = true
         voteButton.alpha = 1.0
         
-        // Reload collection view to update visual selection
         collectionView.reloadData()
     }
 }
