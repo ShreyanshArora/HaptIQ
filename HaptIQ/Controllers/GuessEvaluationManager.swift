@@ -42,6 +42,7 @@ final class GuessEvaluationManager {
     private var hasProcessedResults = false
     private var hasNavigated = false
     private var waitingForResultsSince: TimeInterval = 0
+    private var guessTimeoutTask: DispatchWorkItem?
     
     weak var delegate: GuessEvaluationDelegate?
     private weak var navigationController: UINavigationController?
@@ -86,6 +87,8 @@ final class GuessEvaluationManager {
         guessListener = nil
         gameStateListener?.remove()
         gameStateListener = nil
+        guessTimeoutTask?.cancel()
+        guessTimeoutTask = nil
     }
     
     // MARK: - Game Rules
@@ -129,11 +132,37 @@ final class GuessEvaluationManager {
                     self.hasProcessedResults = true
                     self.guessListener?.remove()
                     self.guessListener = nil
+                    self.guessTimeoutTask?.cancel()
+                    self.guessTimeoutTask = nil
                     
                     let allGuesses = documents.map { $0.data() }
                     self.hostEvaluateAndWriteGameState(allGuesses)
                 }
             }
+            
+        // Start timeout
+        guessTimeoutTask?.cancel()
+        let task = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+            guard !self.hasProcessedResults, RoomManager.shared.isHost else { return }
+            print("⏳ [HOST] Guess timeout reached! Evaluating with received guesses.")
+            
+            self.guessListener?.remove()
+            self.guessListener = nil
+            self.hasProcessedResults = true
+            
+            self.db.collection("rooms")
+                .document(self.roomCode)
+                .collection("guesses")
+                .whereField("round", isEqualTo: self.currentRound)
+                .getDocuments { snapshot, _ in
+                    let docs = snapshot?.documents ?? []
+                    let allGuesses = docs.map { $0.data() }
+                    self.hostEvaluateAndWriteGameState(allGuesses)
+                }
+        }
+        self.guessTimeoutTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + 30.0, execute: task)
     }
     
     private func hostEvaluateAndWriteGameState(_ guesses: [[String: Any]]) {
@@ -160,17 +189,34 @@ final class GuessEvaluationManager {
         var imposterWrong = false
         var wrongCrewmates: [String] = []
 
+        var guessMap: [String: Int] = [:]
         for guess in guesses {
-            guard let playerID = guess["playerID"] as? String,
-                  let tapCount = guess["tapCount"] as? Int else { continue }
-            
-            let isCorrect = tapCount == rumbleCount
-            print("👑 [HOST] Player \(String(playerID.prefix(8))): \(tapCount) vs \(rumbleCount) = \(isCorrect ? "✅" : "❌")")
+            if let playerID = guess["playerID"] as? String,
+               let tapCount = guess["tapCount"] as? Int {
+                guessMap[playerID] = tapCount
+            }
+        }
 
-            if playerID == imposterID {
-                if !isCorrect { imposterWrong = true }
+        for player in players {
+            let playerID = player.id
+            let isImposter = (playerID == imposterID)
+            
+            if let tapCount = guessMap[playerID] {
+                let isCorrect = tapCount == rumbleCount
+                print("👑 [HOST] Player \(String(playerID.prefix(8))): \(tapCount) vs \(rumbleCount) = \(isCorrect ? "✅" : "❌")")
+                
+                if isImposter {
+                    if !isCorrect { imposterWrong = true }
+                } else {
+                    if !isCorrect { wrongCrewmates.append(playerID) }
+                }
             } else {
-                if !isCorrect { wrongCrewmates.append(playerID) }
+                print("👑 [HOST] Player \(String(playerID.prefix(8))): Did not submit (marked ❌)")
+                if isImposter {
+                    imposterWrong = true
+                } else {
+                    wrongCrewmates.append(playerID)
+                }
             }
         }
 
@@ -183,6 +229,14 @@ final class GuessEvaluationManager {
             imposterID: imposterID
         )
         
+        var newHostID = RoomManager.shared.hostID
+        if result.eliminatedPlayerIDs.contains(newHostID) {
+            if let backupHost = result.survivingPlayerIDs.first(where: { $0 != newHostID }) {
+                newHostID = backupHost
+                print("👑 [HOST] Host eliminated! Migrating host to \(newHostID)")
+            }
+        }
+        
         // Write game state to Firestore
         let gameStateData: [String: Any] = [
             "screen": result.screen,
@@ -192,14 +246,20 @@ final class GuessEvaluationManager {
             "eliminatedPlayerIDs": result.eliminatedPlayerIDs,
             "crewmatesWon": result.crewmatesWon as Any,
             "forRound": currentRound,
+            "newHostID": newHostID,
             "timestamp": FieldValue.serverTimestamp()
         ]
         
         print("👑 [HOST] Writing gameState: screen=\(result.screen), forRound=\(currentRound)")
         
+        let newStateString = (result.screen == "result") ? "result" : ((result.screen == "voting") ? "voting" : "playing")
+        
         db.collection("rooms")
             .document(roomCode)
-            .updateData(["gameState": gameStateData]) { [weak self] error in
+            .updateData([
+                "gameState": gameStateData,
+                "state": newStateString
+            ]) { [weak self] error in
                 guard let self = self else { return }
                 
                 if let error = error {
@@ -210,6 +270,10 @@ final class GuessEvaluationManager {
                 print("✅ [HOST] gameState written successfully")
                 
                 self.clearGuesses()
+                
+                if newHostID != RoomManager.shared.hostID {
+                    RoomManager.shared.hostID = newHostID
+                }
                 
                 DispatchQueue.main.async {
                     self.navigateToScreen(result: result)
@@ -330,10 +394,13 @@ final class GuessEvaluationManager {
                     crewmatesWon: gameState["crewmatesWon"] as? Bool
                 )
                 
+                if let newHostID = gameState["newHostID"] as? String {
+                    RoomManager.shared.hostID = newHostID
+                }
+                
                 print("📡 [NON-HOST] Received gameState: screen=\(result.screen), round=\(result.round)")
                 
                 self.gameStateListener?.remove()
-                self.gameStateListener = nil
                 
                 DispatchQueue.main.async {
                     self.navigateToScreen(result: result)
@@ -357,9 +424,13 @@ final class GuessEvaluationManager {
         let myID = RoomManager.shared.currentUserID
         
         // Check if I was eliminated
-        if result.eliminatedPlayerIDs.contains(myID) {
+        if result.eliminatedPlayerIDs.contains(myID) && result.screen != "result" {
             print("💀 I was eliminated → Spectator")
-            let vc = SpectatorViewController()
+            let myPlayer = players.first { $0.id == myID }
+            let vc = SpectatorViewController(
+                playerName: myPlayer?.name,
+                playerAvatar: myPlayer?.avatarImage
+            )
             navigationController?.pushViewController(vc, animated: true)
             return
         }
@@ -372,7 +443,8 @@ final class GuessEvaluationManager {
             let vc = VotingViewController(
                 roomCode: roomCode,
                 players: survivingPlayers,
-                currentRound: currentRound
+                currentRound: currentRound,
+                selectedAvatar: selectedAvatar
             )
             navigationController?.pushViewController(vc, animated: true)
             
@@ -404,11 +476,16 @@ final class GuessEvaluationManager {
             navigationController?.pushViewController(vc, animated: true)
             
         case "result":
+            var imposterAvatar = "char1"
+            if let imposterID = RoomManager.shared.cachedRoles.first(where: { $0.value == "imposter" })?.key,
+               let imposterPlayer = players.first(where: { $0.id == imposterID }) {
+                imposterAvatar = imposterPlayer.avatarImage ?? "char1"
+            }
             let vc = GameResultViewController(
                 crewmatesWon: result.crewmatesWon ?? false,
                 roomCode: roomCode,
                 eliminatedPlayerName: "",
-                eliminatedAvatarImage: "char1"
+                eliminatedAvatarImage: imposterAvatar
             )
             navigationController?.pushViewController(vc, animated: true)
             

@@ -133,10 +133,12 @@ final class VotingViewController: UIViewController {
     private var players: [RoomManager.Player]
     private var selectedPlayerID: String?
     private let currentRound: Int
+    private let selectedAvatar: AvatarPage?
     
     private var hasVoted = false
     private var hasNavigated = false
     private var waitingForResultsSince: TimeInterval = 0
+    private var voteTimeoutTask: DispatchWorkItem?
     
     private let db = Firestore.firestore()
     private var voteListener: ListenerRegistration?
@@ -189,10 +191,11 @@ final class VotingViewController: UIViewController {
         return b
     }()
     
-    init(roomCode: String, players: [RoomManager.Player], currentRound: Int = 1) {
+    init(roomCode: String, players: [RoomManager.Player], currentRound: Int = 1, selectedAvatar: AvatarPage? = nil) {
         self.roomCode = roomCode
         self.players = players
         self.currentRound = currentRound
+        self.selectedAvatar = selectedAvatar
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -208,6 +211,8 @@ final class VotingViewController: UIViewController {
         voteListener = nil
         gameStateListener?.remove()
         gameStateListener = nil
+        voteTimeoutTask?.cancel()
+        voteTimeoutTask = nil
     }
 
     override func viewDidLoad() {
@@ -379,11 +384,35 @@ final class VotingViewController: UIViewController {
                     
                     self.voteListener?.remove()
                     self.voteListener = nil
+                    self.voteTimeoutTask?.cancel()
+                    self.voteTimeoutTask = nil
                     
                     let allVotes = documents.map { $0.data() }
                     self.hostEvaluateVotesAndWriteResult(allVotes)
                 }
             }
+            
+        voteTimeoutTask?.cancel()
+        let task = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+            guard !self.hasNavigated, RoomManager.shared.isHost else { return }
+            print("⏳ [HOST] Vote timeout reached! Evaluating with received votes.")
+            
+            self.voteListener?.remove()
+            self.voteListener = nil
+            
+            self.db.collection("rooms")
+                .document(self.roomCode)
+                .collection("votes")
+                .whereField("round", isEqualTo: self.currentRound)
+                .getDocuments { snapshot, _ in
+                    let docs = snapshot?.documents ?? []
+                    let allVotes = docs.map { $0.data() }
+                    self.hostEvaluateVotesAndWriteResult(allVotes)
+                }
+        }
+        self.voteTimeoutTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + 30.0, execute: task)
     }
     
     private func hostEvaluateVotesAndWriteResult(_ votes: [[String: Any]]) {
@@ -402,9 +431,13 @@ final class VotingViewController: UIViewController {
         }
         
         // Find most voted
-        guard let mostVotedID = voteCounts.max(by: { $0.value < $1.value })?.key else {
-            print("❌ [HOST] No votes found")
-            return
+        let mostVotedID: String
+        if let maxVote = voteCounts.max(by: { $0.value < $1.value })?.key {
+            mostVotedID = maxVote
+        } else {
+            // No one voted, pick randomly to avoid hanging
+            mostVotedID = players.randomElement()?.id ?? ""
+            print("⚠️ [HOST] No votes found, randomly selected fallback.")
         }
         
         let voteCount = voteCounts[mostVotedID] ?? 0
@@ -457,7 +490,7 @@ final class VotingViewController: UIViewController {
         
         // Get eliminated player info
         let eliminatedPlayer = players.first(where: { $0.id == eliminatedPlayerID })
-        let eliminatedName = eliminatedPlayer?.name ?? ""
+        let eliminatedName = eliminatedPlayer?.name ?? (eliminatedPlayerID.isEmpty ? "NO ONE" : "SOMEONE")
         let eliminatedAvatar = eliminatedPlayer?.avatarImage ?? "char1"
         
         // ✅ Write vote result to Firestore
@@ -476,9 +509,14 @@ final class VotingViewController: UIViewController {
         
         print("👑 [HOST] Writing voteResult: screen=\(nextScreen)")
         
+        let newStateString = (nextScreen == "result") ? "result" : ((nextScreen == "voting") ? "voting" : "playing")
+        
         db.collection("rooms")
             .document(roomCode)
-            .updateData(["voteResult": voteResultData]) { [weak self] error in
+            .updateData([
+                "voteResult": voteResultData,
+                "state": newStateString
+            ]) { [weak self] error in
                 guard let self = self else { return }
                 
                 if let error = error {
@@ -598,7 +636,7 @@ final class VotingViewController: UIViewController {
         let myID = RoomManager.shared.currentUserID
         
         // Check if I was voted out
-        if eliminatedPlayerID == myID {
+        if eliminatedPlayerID == myID && screen != "result" {
             print("💀 I was voted out → Spectator")
             navigateToSpectator()
             return
@@ -634,11 +672,17 @@ final class VotingViewController: UIViewController {
     }
     
     private func navigateToGameResult(crewmatesWon: Bool, eliminatedName: String, eliminatedAvatar: String) {
+        var imposterAvatar = "char1"
+        if let imposterID = RoomManager.shared.cachedRoles.first(where: { $0.value == "imposter" })?.key,
+           let imposterPlayer = players.first(where: { $0.id == imposterID }) {
+            imposterAvatar = imposterPlayer.avatarImage ?? "char1"
+        }
+        
         let vc = GameResultViewController(
             crewmatesWon: crewmatesWon,
             roomCode: roomCode,
             eliminatedPlayerName: eliminatedName,
-            eliminatedAvatarImage: eliminatedAvatar
+            eliminatedAvatarImage: imposterAvatar
         )
         navigationController?.pushViewController(vc, animated: true)
     }
@@ -655,6 +699,7 @@ final class VotingViewController: UIViewController {
             role: myRole
         )
         vc.currentRound = round
+        vc.selectedAvatar = selectedAvatar
         navigationController?.pushViewController(vc, animated: true)
     }
     
@@ -673,7 +718,12 @@ final class VotingViewController: UIViewController {
     }
     
     private func navigateToSpectator() {
-        let vc = SpectatorViewController()
+        let myID = RoomManager.shared.currentUserID
+        let myPlayer = players.first { $0.id == myID }
+        let vc = SpectatorViewController(
+            playerName: myPlayer?.name,
+            playerAvatar: myPlayer?.avatarImage
+        )
         navigationController?.pushViewController(vc, animated: true)
     }
     
