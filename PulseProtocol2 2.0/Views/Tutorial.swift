@@ -141,12 +141,10 @@ struct TutorialView: View {
     var body: some View {
         ZStack {
             // Background
-            LinearGradient(
-                colors: [Color(hex: "0A0E27"), Color(hex: "1A1F3A")],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+            Image("gScreen")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
             
             // Content
             VStack(spacing: 30) {
@@ -286,6 +284,33 @@ struct TutorialView: View {
                         removal: .move(edge: .top).combined(with: .opacity)
                     ))
             }
+            
+            // Universal back button
+            VStack {
+                HStack {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(width: 44, height: 44)
+                            .background(
+                                Circle()
+                                    .fill(Color.black.opacity(0.3))
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                                    )
+                            )
+                    }
+                    .padding(.leading, 20)
+                    .padding(.top, 50)
+                    
+                    Spacer()
+                }
+                Spacer()
+            }
         }
         .navigationBarBackButtonHidden(true)
         .animation(.easeOut(duration: 0.3), value: tutorialState.activePopup?.id)
@@ -329,7 +354,7 @@ struct WelcomeView: View {
             
             VStack(spacing: 16) {
                 Text("Let's Start!")
-                    .font(.system(size: 42, weight: .bold, design: .rounded))
+                    .font(.custom("Aclonica-Regular", size: 40))
                     .foregroundColor(.white)
                 
                 Text("Learn to play PulseProtocol")
@@ -361,7 +386,7 @@ struct WelcomeView: View {
                 .padding(.vertical, 20)
                 .background(
                     LinearGradient(
-                        colors: [Color(hex: "4FACFE"), Color(hex: "00F2FE")],
+                        colors: [Color(red: 0/255, green: 150/255, blue: 255/255), Color(red: 0/255, green: 100/255, blue: 255/255)],
                         startPoint: .leading,
                         endPoint: .trailing
                     )
@@ -394,7 +419,7 @@ struct IntroView: View {
             
             VStack(spacing: 16) {
                 Text(title)
-                    .font(.system(size: 38, weight: .bold, design: .rounded))
+                    .font(.custom("Aclonica-Regular", size: 36))
                     .foregroundColor(.white)
                 
                 Text(description)
@@ -448,7 +473,7 @@ struct PracticeView: View {
             // Header
             VStack(spacing: 12) {
                 Text(title)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(.custom("Aclonica-Regular", size: 28))
                     .foregroundColor(.white)
                 
                 Text(description)
@@ -591,7 +616,7 @@ struct FeedbackView: View {
             
             VStack(spacing: 16) {
                 Text(title)
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .font(.custom("Aclonica-Regular", size: 36))
                     .foregroundColor(.white)
                 
                 Text(message)
@@ -615,7 +640,7 @@ struct FeedbackView: View {
                 .padding(.vertical, 18)
                 .background(
                     LinearGradient(
-                        colors: [Color(hex: "4FACFE"), Color(hex: "00F2FE")],
+                        colors: [Color(red: 0/255, green: 150/255, blue: 255/255), Color(red: 0/255, green: 100/255, blue: 255/255)],
                         startPoint: .leading,
                         endPoint: .trailing
                     )
@@ -652,7 +677,7 @@ struct CompletionView: View {
             
             VStack(spacing: 16) {
                 Text("You're Ready!")
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .font(.custom("Aclonica-Regular", size: 40))
                     .foregroundColor(.white)
                 
                 Text("Time to test your skills in the real game")
@@ -688,7 +713,7 @@ struct CompletionView: View {
                     .padding(.vertical, 20)
                     .background(
                         LinearGradient(
-                            colors: [Color(hex: "4FACFE"), Color(hex: "00F2FE")],
+                            colors: [Color(red: 0/255, green: 150/255, blue: 255/255), Color(red: 0/255, green: 100/255, blue: 255/255)],
                             startPoint: .leading,
                             endPoint: .trailing
                         )

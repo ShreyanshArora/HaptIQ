@@ -8,13 +8,11 @@ struct ContentView2: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Background Gradient
-                LinearGradient(
-                    colors: [Color(hex: "0A0E27"), Color(hex: "1A1F3A")],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
+                // New HaptIQ Game Background
+                Image("gScreen")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
                 
                 VStack(spacing: 50) {
                     Spacer()
@@ -50,13 +48,14 @@ struct ContentView2: View {
                         }
                         
                         VStack(spacing: 8) {
-                            Text("PulseProtocol")
-                                .font(.system(size: 44, weight: .bold, design: .rounded))
+                            Text("PULSE PROTOCOL")
+                                .font(.custom("Aclonica-Regular", size: 34))
                                 .foregroundColor(.white)
+                                .shadow(color: .black.opacity(0.5), radius: 2, y: 2)
                             
                             Text("Feel. Remember. Repeat.")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.white.opacity(0.6))
+                                .font(.custom("Aclonica-Regular", size: 16))
+                                .foregroundColor(.white.opacity(0.8))
                         }
                     }
                     
@@ -84,20 +83,24 @@ struct ContentView2: View {
                             Image(systemName: "play.fill")
                                 .font(.system(size: 20, weight: .bold))
                             Text("START GAME")
-                                .font(.system(size: 20, weight: .bold, design: .rounded))
+                                .font(.custom("Aclonica-Regular", size: 22))
                         }
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 22)
                         .background(
                             LinearGradient(
-                                colors: [Color(hex: "4FACFE"), Color(hex: "00F2FE")],
+                                colors: [Color(red: 0/255, green: 150/255, blue: 255/255), Color(red: 0/255, green: 100/255, blue: 255/255)],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                         )
-                        .cornerRadius(18)
-                        .shadow(color: Color(hex: "4FACFE").opacity(0.5), radius: 20, y: 10)
+                        .cornerRadius(25)
+                        .shadow(color: Color(red: 0/255, green: 150/255, blue: 255/255).opacity(0.5), radius: 10, y: 5)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 25)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
                     }
                     .padding(.horizontal, 40)
                     
@@ -107,8 +110,8 @@ struct ContentView2: View {
                             showTutorial = true
                         }) {
                             Text("REPLAY TUTORIAL")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.white.opacity(0.6))
+                                .font(.custom("Aclonica-Regular", size: 16))
+                                .foregroundColor(.white.opacity(0.8))
                         }
                     }
                     
