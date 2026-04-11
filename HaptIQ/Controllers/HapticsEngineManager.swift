@@ -19,32 +19,32 @@ final class HapticsEngineManager {
 
     @objc private func prepareEngine() {
         guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else {
-            print("❌ Haptics not supported")
+            print("Haptics not supported")
             return
         }
 
         do {
             engine = try CHHapticEngine()
             try engine?.start()
-            print("🔥 Haptics Engine started")
+            print("Hptics Engine started")
         } catch {
-            print("❌ Haptics engine fail:", error)
+            print("Haptics engine fail", error)
         }
     }
 
-    // MARK: - 🎯 NEW Countable Rumble Pattern
+    // MARK: - NEW Countable Rumble Pattern
     /// Creates distinct, countable rumble patterns (2-5 rumbles)
     /// Each rumble is strong and separated by a noticeable pause
     /// Players can easily count: "1... 2... 3..."
     func playCountableRumble(count: Int) {
         guard count >= 2 && count <= 5 else {
-            print("⚠️ Count must be 2-5")
+            print("Count must be 2-5")
             return
         }
         
-        // 🔥 CRITICAL: Ensure engine is running
+        //  CRITICAL: Ensure engine is running
         guard let engine = engine else {
-            print("❌ Engine not ready")
+            print("Engine not ready")
             prepareEngine() // Try to restart
             return
         }
@@ -53,7 +53,7 @@ final class HapticsEngineManager {
         do {
             try engine.start()
         } catch {
-            print("⚠️ Engine restart failed:", error)
+            print("Engine restart failed:", error)
             return
         }
 
@@ -89,17 +89,17 @@ final class HapticsEngineManager {
             let pattern = try CHHapticPattern(events: events, parameters: [])
             let player = try engine.makePlayer(with: pattern)
             try player.start(atTime: 0)
-            print("🔥 Playing \(count) countable rumbles")
+            print("Playing \(count) countable rumbles")
             
-            // 🔥 NEW: Verify pattern duration
+            // NEW: Verify pattern duration
             let totalDuration = Double(count) * (rumbleDuration + pauseBetweenRumbles)
-            print("✅ Pattern duration: \(totalDuration)s for \(count) rumbles")
+            print("Pattern duration: \(totalDuration)s for \(count) rumbles")
             
         } catch {
-            print("❌ Countable rumble error:", error)
+            print(" Countable rumble error:", error)
         }
     }
-    // MARK: - ⚡️ Alternative: Faster Pattern (Optional)
+    // MARK: - Alternative: Faster Pattern (Optional)
     /// Faster version with shorter intervals
     /// Use this if 15 seconds feels too long
     func playFastCountableRumble(count: Int) {
@@ -143,13 +143,13 @@ final class HapticsEngineManager {
             let pattern = try CHHapticPattern(events: events, parameters: [])
             let player = try engine.makePlayer(with: pattern)
             try player.start(atTime: 0)
-            print("⚡️ Playing \(count) fast rumbles")
+            print("Playing \(count) fast rumbles")
         } catch {
-            print("❌ Fast rumble error:", error)
+            print("Fast rumble error:", error)
         }
     }
 
-    // MARK: - 🎮 Legacy Simple Rumble (for UI feedback)
+    // MARK: - Legacy Simple Rumble (for UI feedback)
     /// Single simple rumble for button taps, etc.
     func playRumble() {
         guard let engine = engine else { return }
@@ -164,9 +164,9 @@ final class HapticsEngineManager {
             let pattern = try CHHapticPattern(events: [event], parameters: [])
             let player = try engine.makePlayer(with: pattern)
             try player.start(atTime: 0)
-            print("🔥 Simple rumble played")
+            print("Simple rumble played")
         } catch {
-            print("❌ Rumble error:", error)
+            print("Rumble error:", error)
         }
     }
 }
