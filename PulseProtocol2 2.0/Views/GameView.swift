@@ -9,19 +9,10 @@ struct GameView: View {
         ZStack {
             // Background with hex pattern
             ZStack {
-                Image("bghex")
+                Image("gScreen")
                     .resizable()
                     .scaledToFill()
                     .ignoresSafeArea()
-                    .opacity(0.3)
-                
-                LinearGradient(
-                    colors: [Color(hex: "0A0E27"), Color(hex: "1A1F3A")],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .opacity(0.85)
-                .ignoresSafeArea()
             }
 
             // Phase-based content
@@ -46,6 +37,33 @@ struct GameView: View {
                         removal:   .move(edge: .top).combined(with: .opacity)
                     ))
             }
+            
+            // Back button overlay (universal exit)
+            VStack {
+                HStack {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(width: 44, height: 44)
+                            .background(
+                                Circle()
+                                    .fill(Color.black.opacity(0.3))
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                                    )
+                            )
+                    }
+                    .padding(.leading, 20)
+                    .padding(.top, 50)
+                    
+                    Spacer()
+                }
+                Spacer()
+            }
         }
         .navigationBarBackButtonHidden(true)
         .animation(.easeOut(duration: 0.3), value: controller.session.activePopup?.id)
@@ -58,12 +76,13 @@ struct GameView: View {
         VStack(spacing: 30) {
             Spacer()
 
-            Text("PulseProtocol")
-                .font(.system(size: 48, weight: .bold, design: .rounded))
+            Text("PULSE PROTOCOL")
+                .font(.custom("Aclonica-Regular", size: 36))
                 .foregroundColor(.white)
+                .shadow(color: .black.opacity(0.5), radius: 2, y: 2)
 
             Text("Feel the Rhythm")
-                .font(.system(size: 20, weight: .medium, design: .rounded))
+                .font(.custom("Aclonica-Regular", size: 20))
                 .foregroundColor(.white.opacity(0.7))
 
             Spacer()
@@ -85,21 +104,25 @@ struct GameView: View {
             // Start
             Button(action: { controller.startGame() }) {
                 Text("START GAME")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundColor(.black)
+                    .font(.custom("Aclonica-Regular", size: 22))
+                    .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 20)
-                    .background(RoundedRectangle(cornerRadius: 16).fill(Color.white))
+                    .padding(.vertical, 22)
+                    .background(
+                        LinearGradient(
+                            colors: [Color(red: 0/255, green: 150/255, blue: 255/255), Color(red: 0/255, green: 100/255, blue: 255/255)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(25)
+                    .shadow(color: Color(red: 0/255, green: 150/255, blue: 255/255).opacity(0.5), radius: 10, y: 5)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 25)
+                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                    )
             }
             .padding(.horizontal)
-
-            // Back
-            Button(action: { dismiss() }) {
-                Text("BACK")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.7))
-            }
-            .padding(.top, 10)
 
             Spacer()
         }
@@ -308,20 +331,27 @@ struct GameView: View {
             VStack(spacing: 15) {
                 Button(action: { controller.restartGame() }) {
                     Text("PLAY AGAIN")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.black)
+                        .font(.custom("Aclonica-Regular", size: 18))
+                        .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 18)
-                        .background(RoundedRectangle(cornerRadius: 16).fill(Color.white))
+                        .background(
+                            LinearGradient(
+                                colors: [Color(red: 0/255, green: 150/255, blue: 255/255), Color(red: 0/255, green: 100/255, blue: 255/255)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(20)
                 }
 
                 Button(action: { controller.returnToMenu() }) {
                     Text("MENU")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.custom("Aclonica-Regular", size: 16))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(RoundedRectangle(cornerRadius: 16).stroke(Color.white, lineWidth: 2))
+                        .background(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.3), lineWidth: 2))
                 }
             }
             .padding(.horizontal)
@@ -355,7 +385,7 @@ struct PulsingCircle: View {
                 .frame(width: 140, height: 140)
 
             Circle()
-                .stroke(Color.white, lineWidth: 2)
+                .stroke(Color(red: 0/255, green: 200/255, blue: 255/255), lineWidth: 2)
                 .frame(width: 140, height: 140)
                 .scaleEffect(animating ? 1.7 : 1.0)
                 .opacity(animating ? 0.0 : 0.7)

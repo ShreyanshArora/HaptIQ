@@ -76,33 +76,13 @@ class JoinRoomViewController: UIViewController {
 
     private let pulseButton: UIButton = {
         let b = UIButton(type: .system)
-        
         b.setTitle("Pulse Protocol", for: .normal)
         b.setTitleColor(.white, for: .normal)
-        b.titleLabel?.font = UIFont(name: "Aclonica-Regular", size: 24)
-        
-        b.layer.cornerRadius = 32
-        b.clipsToBounds = false
-        
-        // Gradient background
-        let gradient = CAGradientLayer()
-        gradient.colors = [
-            UIColor(red: 79/255, green: 172/255, blue: 254/255, alpha: 1).cgColor,
-            UIColor(red: 0/255, green: 242/255, blue: 254/255, alpha: 1).cgColor
-        ]
-        gradient.startPoint = CGPoint(x: 0, y: 0)
-        gradient.endPoint = CGPoint(x: 1, y: 1)
-        gradient.cornerRadius = 32
-        
-        gradient.frame = CGRect(x: 0, y: 0, width: 300, height: 75)
-        b.layer.insertSublayer(gradient, at: 0)
-        
-        // Glow shadow
-        b.layer.shadowColor = UIColor(red: 79/255, green: 172/255, blue: 254/255, alpha: 1).cgColor
-        b.layer.shadowOpacity = 0.6
-        b.layer.shadowRadius = 18
-        b.layer.shadowOffset = CGSize(width: 0, height: 8)
-        
+        b.titleLabel?.font = UIFont(name: "Aclonica-Regular", size: 32)
+        b.layer.cornerRadius = 25
+        b.layer.borderColor = UIColor.white.cgColor
+        b.layer.borderWidth = 3
+        b.backgroundColor = .clear
         b.translatesAutoresizingMaskIntoConstraints = false
         return b
     }()

@@ -60,21 +60,15 @@ struct InputView: View {
     // MARK: - Background
     private var backgroundView: some View {
         ZStack {
-            Image("bghex")
+            Image("gScreen")
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
-                .opacity(isBonus ? 0.5 : 0.3)
 
-            LinearGradient(
-                colors: isBonus
-                    ? [Color(hex: "1A0E27"), Color(hex: "2A1F3A")]
-                    : [Color(hex: "0A0E27"), Color(hex: "1A1F3A")],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .opacity(0.85)
-            .ignoresSafeArea()
+            if isBonus {
+                Color.black.opacity(0.4)
+                    .ignoresSafeArea()
+            }
 
             // ⭐ Soft side fade polish
             LinearGradient(
@@ -136,7 +130,7 @@ struct InputView: View {
     // MARK: - Streak
     private var streakView: some View {
         Text("🔥 \(streak) STREAK")
-            .font(.system(size: 20, weight: .bold))
+            .font(.custom("Aclonica-Regular", size: 20))
             .foregroundColor(.orange)
             .transition(.scale)
     }
@@ -144,7 +138,7 @@ struct InputView: View {
     // MARK: - Feedback
     private var feedbackView: some View {
         Text(feedbackText)
-            .font(.system(size: 44, weight: .black, design: .rounded))
+            .font(.custom("Aclonica-Regular", size: 44))
             .foregroundColor(feedbackColor)
             .transition(.scale.combined(with: .opacity))
     }
