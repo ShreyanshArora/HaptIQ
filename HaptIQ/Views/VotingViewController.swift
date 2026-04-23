@@ -130,7 +130,8 @@ class VotePlayerCell: UICollectionViewCell {
 final class VotingViewController: UIViewController {
     
     private let roomCode: String
-    private var players: [RoomManager.Player]
+    private var players: [RoomManager.Player] = []
+    private let survivingPlayerIDs: [String]
     private var selectedPlayerID: String?
     private let currentRound: Int
     private let selectedAvatar: AvatarPage?
@@ -191,9 +192,9 @@ final class VotingViewController: UIViewController {
         return b
     }()
     
-    init(roomCode: String, players: [RoomManager.Player], currentRound: Int = 1, selectedAvatar: AvatarPage? = nil) {
+    init(roomCode: String, survivingPlayerIDs: [String], currentRound: Int = 1, selectedAvatar: AvatarPage? = nil) {
         self.roomCode = roomCode
-        self.players = players
+        self.survivingPlayerIDs = survivingPlayerIDs
         self.currentRound = currentRound
         self.selectedAvatar = selectedAvatar
         super.init(nibName: nil, bundle: nil)
@@ -222,7 +223,48 @@ final class VotingViewController: UIViewController {
         navigationItem.hidesBackButton = true
         
         print("🗳 Voting screen loaded - \(players.count) players, Round \(currentRound)")
-        print("👑 Am I host? \(RoomManager.shared.isHost)")
+        
+        // Ensure we have the latest players list from Firestore
+        fetchLatestPlayers()
+    }
+    
+    private func fetchLatestPlayers() {
+        print("🗳 Fetching latest players from room \(roomCode)")
+        db.collection("rooms")
+            .document(roomCode)
+            .collection("players")
+            .getDocuments { [weak self] snapshot, error in
+                guard let self = self else { return }
+                if let error = error {
+                    print("❌ Failed to fetch latest players: \(error)")
+                    return
+                }
+                
+                guard let documents = snapshot?.documents else { return }
+                
+                let allPlayersInRoom = documents.compactMap { doc -> RoomManager.Player? in
+                    let data = doc.data()
+                    return RoomManager.Player(
+                        id: doc.documentID,
+                        name: data["name"] as? String ?? "Unknown",
+                        isHost: data["isHost"] as? Bool ?? false,
+                        avatarImage: data["avatarImage"] as? String,
+                        avatarFullImage: data["avatarFullImage"] as? String,
+                        avatarTitle: data["avatarTitle"] as? String
+                    )
+                }
+                
+                print("🗳 Total players in Firestore: \(allPlayersInRoom.count)")
+                
+                // Filter to show only the surviving players
+                self.players = allPlayersInRoom.filter { self.survivingPlayerIDs.contains($0.id) }
+                
+                print("🗳 Filtered surviving players: \(self.players.count)")
+                
+                DispatchQueue.main.async {
+                    self.playersCollectionView.reloadData()
+                }
+            }
     }
     
     override func viewWillDisappear(_ animated: Bool) {

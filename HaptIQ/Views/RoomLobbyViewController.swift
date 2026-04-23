@@ -349,6 +349,18 @@ final class RoomLobbyViewController: UIViewController {
     @objc private func startGameTapped() {
         guard !hasLeftLobby else { return }
         
+        // ✅ Check minimum player count
+        if players.count < 2 {
+            let alert = UIAlertController(
+                title: "Not Enough Players!",
+                message: "At least 2 players are needed to start the game. Share the room code and wait for others to join!",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
+        }
+        
         guard let host = players.first(where: { $0.isHost }) else {
             print("❌ No host in players list")
             return
