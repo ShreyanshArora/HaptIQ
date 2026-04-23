@@ -1,5 +1,5 @@
 import UIKit
-
+//testing
 final class AvatarSelectionController: UIPageViewController {
 
     // MARK: - Data with separate images for selection and lobby
@@ -196,8 +196,9 @@ final class AvatarSelectionController: UIPageViewController {
         let idx = currentIndex()
         let selectedAvatar = pages[idx]
         
-        // Save LOBBY image name to UserDefaults (this will be shown in room lobby)
+        // Save LOBBY image name and FULL image name to UserDefaults
         UserDefaults.standard.set(selectedAvatar.lobbyImageName, forKey: "selectedAvatarImage")
+        UserDefaults.standard.set(selectedAvatar.imageName, forKey: "selectedAvatarFullImage")
         UserDefaults.standard.set(selectedAvatar.title, forKey: "selectedAvatarTitle")
         
         // Navigate to the next screen

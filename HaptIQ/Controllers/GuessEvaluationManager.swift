@@ -439,10 +439,9 @@ final class GuessEvaluationManager {
         
         switch result.screen {
         case "voting":
-            let survivingPlayers = players.filter { result.survivingPlayerIDs.contains($0.id) }
             let vc = VotingViewController(
                 roomCode: roomCode,
-                players: survivingPlayers,
+                survivingPlayerIDs: result.survivingPlayerIDs,
                 currentRound: currentRound,
                 selectedAvatar: selectedAvatar
             )
@@ -467,7 +466,7 @@ final class GuessEvaluationManager {
                 crewmatesWon: false,
                 roomCode: roomCode,
                 eliminatedPlayerName: eliminatedPlayer?.name ?? "",
-                eliminatedAvatarImage: eliminatedPlayer?.avatarImage ?? "char1",
+                eliminatedAvatarImage: eliminatedPlayer?.avatarFullImage ?? eliminatedPlayer?.avatarImage ?? "char1",
                 isWrongElimination: true,
                 survivingPlayers: survivingPlayers,
                 nextRound: result.round,
@@ -479,7 +478,7 @@ final class GuessEvaluationManager {
             var imposterAvatar = "char1"
             if let imposterID = RoomManager.shared.cachedRoles.first(where: { $0.value == "imposter" })?.key,
                let imposterPlayer = players.first(where: { $0.id == imposterID }) {
-                imposterAvatar = imposterPlayer.avatarImage ?? "char1"
+                imposterAvatar = imposterPlayer.avatarFullImage ?? imposterPlayer.avatarImage ?? "char1"
             }
             let vc = GameResultViewController(
                 crewmatesWon: result.crewmatesWon ?? false,

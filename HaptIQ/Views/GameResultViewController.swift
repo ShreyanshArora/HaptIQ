@@ -24,14 +24,6 @@ final class GameResultViewController: UIViewController {
         return iv
     }()
     
-    // "Haptic Hunt" title badge image
-    private let titleBannerImageView: UIImageView = {
-        let iv = UIImageView(image: UIImage(named: "titleBanner"))
-        iv.contentMode = .scaleAspectFit
-        iv.translatesAutoresizingMaskIntoConstraints = false
-        iv.isHidden = true
-        return iv
-    }()
     
     // Red glow circle (for wrong elimination screen)
     private let glowCircleView: UIView = {
@@ -144,17 +136,6 @@ final class GameResultViewController: UIViewController {
         return b
     }()
     
-    private let testRoleLabel: UILabel = {
-        let l = UILabel()
-        l.font = UIFont.systemFont(ofSize: 12, weight: .bold)
-        l.textColor = .white
-        l.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-        l.textAlignment = .center
-        l.layer.cornerRadius = 4
-        l.clipsToBounds = true
-        l.translatesAutoresizingMaskIntoConstraints = false
-        return l
-    }()
     
     // MARK: - Initializer
     
@@ -188,14 +169,6 @@ final class GameResultViewController: UIViewController {
         let myID = RoomManager.shared.currentUserID
         let iAmImposter = (RoomManager.shared.cachedRoles[myID] == "imposter")
         
-        print("🎮 GameResultViewController - isWrongElimination: \(isWrongElimination), crewmatesWon: \(crewmatesWon), iAmImposter: \(iAmImposter)")
-        
-        view.addSubview(testRoleLabel)
-        testRoleLabel.text = " Role: \(iAmImposter ? "Imposter" : "Crewmate") "
-        NSLayoutConstraint.activate([
-            testRoleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
-            testRoleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16)
-        ])
         
         if isWrongElimination {
             // Wrong person eliminated - game continues
@@ -237,14 +210,11 @@ final class GameResultViewController: UIViewController {
         view.backgroundColor = UIColor(red: 10/255, green: 20/255, blue: 45/255, alpha: 1)
         
         view.addSubview(bgImage)
-        view.addSubview(titleBannerImageView)
         view.addSubview(largeAvatarView)
         view.addSubview(resultLabel)
         view.addSubview(playAgainButton)
         view.addSubview(exitButton)
         
-        // Show elements
-        titleBannerImageView.isHidden = false
         largeAvatarView.isHidden = false
         
         // Hide other elements
@@ -262,15 +232,9 @@ final class GameResultViewController: UIViewController {
             bgImage.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bgImage.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             
-            // Title banner
-            titleBannerImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
-            titleBannerImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            titleBannerImageView.widthAnchor.constraint(equalToConstant: 240),
-            titleBannerImageView.heightAnchor.constraint(equalToConstant: 60),
-            
             // Large avatar (imposter character)
             largeAvatarView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            largeAvatarView.topAnchor.constraint(equalTo: titleBannerImageView.bottomAnchor, constant: 30),
+            largeAvatarView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 100),
             largeAvatarView.widthAnchor.constraint(equalToConstant: 250),
             largeAvatarView.heightAnchor.constraint(equalToConstant: 250),
             
@@ -296,45 +260,51 @@ final class GameResultViewController: UIViewController {
     }
     
     private func configureCrewmatesWon() {
-        // Show actual imposter character image
-        largeAvatarView.image = UIImage(named: eliminatedAvatarImage)
+        // Show the user's own selected avatar
+        let myAvatar = UserDefaults.standard.string(forKey: "selectedAvatarFullImage") ?? "char1"
+        largeAvatarView.image = UIImage(named: myAvatar)
         
         // "YOU CAUGHT THE IMPOSTER! YOU WON!"
         resultLabel.text = "YOU CAUGHT THE\nIMPOSTER!\nYOU WON!"
         resultLabel.textColor = .white
-        resultLabel.font = UIFont(name: "Aclonica-Regular", size: 28)
+        resultLabel.font = UIFont(name: "Aclonica-Regular", size: 36)
     }
     
 
     private func configureImposterLost() {
-        largeAvatarView.image = UIImage(named: eliminatedAvatarImage)
+        let myAvatar = UserDefaults.standard.string(forKey: "selectedAvatarFullImage") ?? "char1"
+        largeAvatarView.image = UIImage(named: myAvatar)
         
         resultLabel.text = "YOU WERE\nCAUGHT!\nYOU LOSE!"
         resultLabel.textColor = UIColor(red: 255/255, green: 72/255, blue: 72/255, alpha: 1)
-        resultLabel.font = UIFont(name: "Aclonica-Regular", size: 28)
+        resultLabel.font = UIFont(name: "Aclonica-Regular", size: 36)
     }
     
 
     private func configureImposterWon() {
-        iconView.image = UIImage(named: "Mafia") ?? UIImage(systemName: "crown.fill")
-        iconView.tintColor = .red
+        let myAvatar = UserDefaults.standard.string(forKey: "selectedAvatarFullImage") ?? "char1"
+        largeAvatarView.image = UIImage(named: myAvatar)
         
         resultLabel.text = "VICTORY!"
-        resultLabel.textColor = UIColor(red: 255/255, green: 72/255, blue: 72/255, alpha: 1)
+        resultLabel.textColor = .white
+        resultLabel.font = UIFont(name: "Aclonica-Regular", size: 36)
         
         subtitleLabel.text = "You fooled everyone!\nMaster of deception!"
+        subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.8)
         subtitleLabel.isHidden = false
     }
     
 
     private func configureCrewmateLost() {
-        iconView.image = UIImage(systemName: "xmark.circle.fill")
-        iconView.tintColor = .red
+        let myAvatar = UserDefaults.standard.string(forKey: "selectedAvatarFullImage") ?? "char1"
+        largeAvatarView.image = UIImage(named: myAvatar)
         
         resultLabel.text = "YOU LOSE!"
         resultLabel.textColor = UIColor(red: 255/255, green: 72/255, blue: 72/255, alpha: 1)
+        resultLabel.font = UIFont(name: "Aclonica-Regular", size: 36)
         
         subtitleLabel.text = "The imposter won!\nTry to be more careful next time."
+        subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.8)
         subtitleLabel.isHidden = false
     }
     
