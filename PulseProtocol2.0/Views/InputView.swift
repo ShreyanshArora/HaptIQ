@@ -129,7 +129,8 @@ struct InputView: View {
                     .foregroundColor(isBonus ? .yellow : .white)
             }
         }
-        .padding(.horizontal, 32) // ⭐ Alignment polish
+        .padding(.leading, 70) // Increased leading padding to avoid back button collision
+        .padding(.trailing, 32)
         .padding(.top, 24)
     }
 

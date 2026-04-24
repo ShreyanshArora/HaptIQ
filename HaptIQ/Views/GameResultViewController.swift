@@ -18,7 +18,7 @@ final class GameResultViewController: UIViewController {
     // MARK: - UI Components
     
     private let bgImage: UIImageView = {
-        let iv = UIImageView(image: UIImage(named: "gScreen"))
+        let iv = UIImageView(image: UIImage(named: "bghex"))
         iv.contentMode = .scaleAspectFill
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
