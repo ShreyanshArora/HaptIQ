@@ -316,12 +316,26 @@ struct GameView: View {
                 }
 
                 Button(action: { controller.returnToMenu() }) {
-                    Text("MENU")
+                    Text("BACK TO MENU")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(RoundedRectangle(cornerRadius: 16).stroke(Color.white, lineWidth: 2))
+                }
+                
+                Button(action: {
+                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                       let rootVC = windowScene.windows.first(where: { $0.isKeyWindow })?.rootViewController {
+                        rootVC.dismiss(animated: true)
+                    }
+                }) {
+                    Text("EXIT TO HOME")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(Color.red.opacity(0.8))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(RoundedRectangle(cornerRadius: 16).stroke(Color.red.opacity(0.6), lineWidth: 2))
                 }
             }
             .padding(.horizontal)

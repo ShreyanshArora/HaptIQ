@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView2: View {
     @State private var showTutorial = false
     @State private var navigateToGame = false
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         NavigationStack {
@@ -16,6 +17,18 @@ struct ContentView2: View {
                 .ignoresSafeArea()
                 
                 VStack(spacing: 50) {
+                    // Close button
+                    HStack {
+                        Spacer()
+                        Button(action: { dismiss() }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 32))
+                                .foregroundColor(.white.opacity(0.6))
+                        }
+                    }
+                    .padding(.trailing, 24)
+                    .padding(.top, 16)
+                    
                     Spacer()
                     
                     // Logo & Title

@@ -47,6 +47,21 @@ class JoinRoomViewController: UIViewController {
         return l
     }()
 
+    // MARK: - Instructions Button
+    private let instructionsButton: UIButton = {
+        let b = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 26, weight: .medium)
+        let image = UIImage(systemName: "info.circle.fill", withConfiguration: config)
+        b.setImage(image, for: .normal)
+        b.tintColor = .white
+        b.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        b.layer.cornerRadius = 22
+        b.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        b.layer.borderWidth = 1.5
+        b.translatesAutoresizingMaskIntoConstraints = false
+        return b
+    }()
+
     // MARK: - Buttons
     private let createButton: UIButton = {
         let b = UIButton(type: .system)
@@ -127,6 +142,7 @@ class JoinRoomViewController: UIViewController {
         view.addSubview(createButton)
         view.addSubview(joinButton)
         view.addSubview(pulseButton)
+        view.addSubview(instructionsButton)
 
         NSLayoutConstraint.activate([
             // Background
@@ -134,6 +150,12 @@ class JoinRoomViewController: UIViewController {
             backgroundImage.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             backgroundImage.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             backgroundImage.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            // Instructions button (top-right corner)
+            instructionsButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
+            instructionsButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            instructionsButton.widthAnchor.constraint(equalToConstant: 44),
+            instructionsButton.heightAnchor.constraint(equalToConstant: 44),
 
             // Left Character
             leftCharacter.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: -50),
@@ -183,6 +205,7 @@ class JoinRoomViewController: UIViewController {
         createButton.addTarget(self, action: #selector(createTapped), for: .touchUpInside)
         joinButton.addTarget(self, action: #selector(joinTapped), for: .touchUpInside)
         pulseButton.addTarget(self, action: #selector(openPulseProtocol), for: .touchUpInside)
+        instructionsButton.addTarget(self, action: #selector(instructionsTapped), for: .touchUpInside)
     }
 
     @objc private func joinTapped() {
@@ -214,7 +237,19 @@ class JoinRoomViewController: UIViewController {
 
         vc.modalPresentationStyle = .fullScreen
         present(vc, animated: true)
-            
+    }
 
+    @objc private func instructionsTapped() {
+        let vc = Instructions()
+        vc.modalPresentationStyle = .pageSheet
+        vc.modalTransitionStyle = .coverVertical
+
+        if let sheet = vc.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 28
+        }
+
+        present(vc, animated: true)
     }
 }
