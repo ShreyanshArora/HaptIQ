@@ -153,7 +153,7 @@
 				E11568772EB1591E00E0B24B /* HaptIQTests */,
 				E11568812EB1591E00E0B24B /* HaptIQUITests */,
 				E115685F2EB1591C00E0B24B /* Products */,
-				E1EC59C02F80E19200D0A26D /* PulseProtocol2 2.0 */,
+				E1EC59C02F80E19200D0A26D /* PulseProtocol */,
 			);
 			sourceTree = "<group>";
 		};
@@ -217,7 +217,7 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
-		E1EC59C02F80E19200D0A26D /* PulseProtocol2 2.0 */ = {
+		E1EC59C02F80E19200D0A26D /* PulseProtocol */ = {
 			isa = PBXGroup;
 			children = (
 				E1EC59AD2F80E19200D0A26D /* Controllers */,
@@ -227,7 +227,7 @@
 				E1EC59BE2F80E19200D0A26D /* Views */,
 				E1EC59BF2F80E19200D0A26D /* PulseProtocol2_0App.swift */,
 			);
-			path = "PulseProtocol2 2.0";
+			path = PulseProtocol;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
