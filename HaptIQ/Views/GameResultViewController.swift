@@ -24,36 +24,6 @@ final class GameResultViewController: UIViewController {
         return iv
     }()
     
-    // "Haptic Hunt" title badge (for crewmates win screen)
-    private let titleBadge: UIImageView = {
-        let iv = UIImageView()
-        iv.contentMode = .scaleAspectFit
-        iv.translatesAutoresizingMaskIntoConstraints = false
-        iv.isHidden = true
-        return iv
-    }()
-    
-    // Title label for badge text
-    private let titleBadgeLabel: UILabel = {
-        let l = UILabel()
-        l.text = "HaPtiC HuNt"
-        l.font = UIFont(name: "Aclonica-Regular", size: 22)
-        l.textColor = UIColor(red: 255/255, green: 100/255, blue: 100/255, alpha: 1)
-        l.textAlignment = .center
-        l.translatesAutoresizingMaskIntoConstraints = false
-        l.isHidden = true
-        return l
-    }()
-    
-    // Badge background
-    private let badgeBackground: UIView = {
-        let v = UIView()
-        v.backgroundColor = UIColor(red: 100/255, green: 150/255, blue: 200/255, alpha: 0.8)
-        v.layer.cornerRadius = 20
-        v.translatesAutoresizingMaskIntoConstraints = false
-        v.isHidden = true
-        return v
-    }()
     
     // Red glow circle (for wrong elimination screen)
     private let glowCircleView: UIView = {
@@ -166,6 +136,7 @@ final class GameResultViewController: UIViewController {
         return b
     }()
     
+    
     // MARK: - Initializer
     
     init(crewmatesWon: Bool,
@@ -198,7 +169,6 @@ final class GameResultViewController: UIViewController {
         let myID = RoomManager.shared.currentUserID
         let iAmImposter = (RoomManager.shared.cachedRoles[myID] == "imposter")
         
-        print("🎮 GameResultViewController - isWrongElimination: \(isWrongElimination), crewmatesWon: \(crewmatesWon), iAmImposter: \(iAmImposter)")
         
         if isWrongElimination {
             // Wrong person eliminated - game continues
@@ -210,15 +180,15 @@ final class GameResultViewController: UIViewController {
             configureCrewmatesWon()
         } else if crewmatesWon && iAmImposter {
             // Crewmates won but I'm the imposter - show lose screen
-            setupImposterLostUI()
+            setupCrewmatesWonUI()
             configureImposterLost()
         } else if !crewmatesWon && iAmImposter {
             // Imposter won and I'm the imposter - show win screen
-            setupImposterWonUI()
+            setupCrewmatesWonUI()
             configureImposterWon()
         } else {
             // Imposter won and I'm a crewmate - show lose screen
-            setupCrewmateLostUI()
+            setupCrewmatesWonUI()
             configureCrewmateLost()
         }
     }
@@ -228,7 +198,7 @@ final class GameResultViewController: UIViewController {
         
         if isWrongElimination {
             applyGradientToContinueButton()
-            drawBlueGlowCircle()
+            drawRedGlowCircle()
         }
     }
     
@@ -240,16 +210,11 @@ final class GameResultViewController: UIViewController {
         view.backgroundColor = UIColor(red: 10/255, green: 20/255, blue: 45/255, alpha: 1)
         
         view.addSubview(bgImage)
-        view.addSubview(badgeBackground)
-        view.addSubview(titleBadgeLabel)
         view.addSubview(largeAvatarView)
         view.addSubview(resultLabel)
         view.addSubview(playAgainButton)
         view.addSubview(exitButton)
         
-        // Show elements
-        badgeBackground.isHidden = false
-        titleBadgeLabel.isHidden = false
         largeAvatarView.isHidden = false
         
         // Hide other elements
@@ -267,19 +232,9 @@ final class GameResultViewController: UIViewController {
             bgImage.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bgImage.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             
-            // Badge background
-            badgeBackground.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
-            badgeBackground.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            badgeBackground.widthAnchor.constraint(equalToConstant: 180),
-            badgeBackground.heightAnchor.constraint(equalToConstant: 45),
-            
-            // Title badge label
-            titleBadgeLabel.centerXAnchor.constraint(equalTo: badgeBackground.centerXAnchor),
-            titleBadgeLabel.centerYAnchor.constraint(equalTo: badgeBackground.centerYAnchor),
-            
             // Large avatar (imposter character)
             largeAvatarView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            largeAvatarView.topAnchor.constraint(equalTo: badgeBackground.bottomAnchor, constant: 30),
+            largeAvatarView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 100),
             largeAvatarView.widthAnchor.constraint(equalToConstant: 250),
             largeAvatarView.heightAnchor.constraint(equalToConstant: 250),
             
@@ -305,216 +260,51 @@ final class GameResultViewController: UIViewController {
     }
     
     private func configureCrewmatesWon() {
-        // Show imposter character image (the masked villain)
-        largeAvatarView.image = UIImage(named: "imposterCharacter") ?? UIImage(named: "Mafia") ?? UIImage(named: eliminatedAvatarImage)
+        // Show the user's own selected avatar
+        let myAvatar = UserDefaults.standard.string(forKey: "selectedAvatarFullImage") ?? "char1"
+        largeAvatarView.image = UIImage(named: myAvatar)
         
         // "YOU CAUGHT THE IMPOSTER! YOU WON!"
         resultLabel.text = "YOU CAUGHT THE\nIMPOSTER!\nYOU WON!"
         resultLabel.textColor = .white
-        resultLabel.font = UIFont(name: "Aclonica-Regular", size: 28)
+        resultLabel.font = UIFont(name: "Aclonica-Regular", size: 36)
     }
     
-    // ════════════════════════════════════════════════════════════════════
-    // MARK: - Imposter Lost UI (for imposter when caught)
-    // ════════════════════════════════════════════════════════════════════
-    
-    private func setupImposterLostUI() {
-        view.backgroundColor = UIColor(red: 10/255, green: 20/255, blue: 45/255, alpha: 1)
-        
-        view.addSubview(bgImage)
-        view.addSubview(iconView)
-        view.addSubview(resultLabel)
-        view.addSubview(subtitleLabel)
-        view.addSubview(playAgainButton)
-        view.addSubview(exitButton)
-        
-        // Hide other elements
-        badgeBackground.isHidden = true
-        titleBadgeLabel.isHidden = true
-        largeAvatarView.isHidden = true
-        eliminatedAvatarView.isHidden = true
-        eliminatedLabel.isHidden = true
-        continueButton.isHidden = true
-        glowCircleView.isHidden = true
-        
-        NSLayoutConstraint.activate([
-            bgImage.topAnchor.constraint(equalTo: view.topAnchor),
-            bgImage.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            bgImage.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            bgImage.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            
-            iconView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 80),
-            iconView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: 180),
-            iconView.heightAnchor.constraint(equalToConstant: 180),
-            
-            resultLabel.topAnchor.constraint(equalTo: iconView.bottomAnchor, constant: 40),
-            resultLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
-            resultLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
-            
-            subtitleLabel.topAnchor.constraint(equalTo: resultLabel.bottomAnchor, constant: 20),
-            subtitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
-            subtitleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40),
-            
-            playAgainButton.bottomAnchor.constraint(equalTo: exitButton.topAnchor, constant: -20),
-            playAgainButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            playAgainButton.widthAnchor.constraint(equalToConstant: 260),
-            playAgainButton.heightAnchor.constraint(equalToConstant: 60),
-            
-            exitButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
-            exitButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            exitButton.widthAnchor.constraint(equalToConstant: 260),
-            exitButton.heightAnchor.constraint(equalToConstant: 60)
-        ])
-        
-        playAgainButton.addTarget(self, action: #selector(playAgainTapped), for: .touchUpInside)
-        exitButton.addTarget(self, action: #selector(exitTapped), for: .touchUpInside)
-    }
-    
+
     private func configureImposterLost() {
-        iconView.image = UIImage(named: "Mafia") ?? UIImage(systemName: "xmark.circle.fill")
-        iconView.tintColor = .red
+        let myAvatar = UserDefaults.standard.string(forKey: "selectedAvatarFullImage") ?? "char1"
+        largeAvatarView.image = UIImage(named: myAvatar)
         
-        resultLabel.text = "YOU LOSE!"
+        resultLabel.text = "YOU WERE\nCAUGHT!\nYOU LOSE!"
         resultLabel.textColor = UIColor(red: 255/255, green: 72/255, blue: 72/255, alpha: 1)
-        
-        subtitleLabel.text = "The crew caught you!\nBetter luck next time."
-        subtitleLabel.isHidden = false
+        resultLabel.font = UIFont(name: "Aclonica-Regular", size: 36)
     }
     
-    // ════════════════════════════════════════════════════════════════════
-    // MARK: - Imposter Won UI (for imposter)
-    // ════════════════════════════════════════════════════════════════════
-    
-    private func setupImposterWonUI() {
-        view.backgroundColor = UIColor(red: 10/255, green: 20/255, blue: 45/255, alpha: 1)
-        
-        view.addSubview(bgImage)
-        view.addSubview(iconView)
-        view.addSubview(resultLabel)
-        view.addSubview(subtitleLabel)
-        view.addSubview(playAgainButton)
-        view.addSubview(exitButton)
-        
-        // Hide other elements
-        badgeBackground.isHidden = true
-        titleBadgeLabel.isHidden = true
-        largeAvatarView.isHidden = true
-        eliminatedAvatarView.isHidden = true
-        eliminatedLabel.isHidden = true
-        continueButton.isHidden = true
-        glowCircleView.isHidden = true
-        
-        NSLayoutConstraint.activate([
-            bgImage.topAnchor.constraint(equalTo: view.topAnchor),
-            bgImage.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            bgImage.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            bgImage.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            
-            iconView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 80),
-            iconView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: 180),
-            iconView.heightAnchor.constraint(equalToConstant: 180),
-            
-            resultLabel.topAnchor.constraint(equalTo: iconView.bottomAnchor, constant: 40),
-            resultLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
-            resultLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
-            
-            subtitleLabel.topAnchor.constraint(equalTo: resultLabel.bottomAnchor, constant: 20),
-            subtitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
-            subtitleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40),
-            
-            playAgainButton.bottomAnchor.constraint(equalTo: exitButton.topAnchor, constant: -20),
-            playAgainButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            playAgainButton.widthAnchor.constraint(equalToConstant: 260),
-            playAgainButton.heightAnchor.constraint(equalToConstant: 60),
-            
-            exitButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
-            exitButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            exitButton.widthAnchor.constraint(equalToConstant: 260),
-            exitButton.heightAnchor.constraint(equalToConstant: 60)
-        ])
-        
-        playAgainButton.addTarget(self, action: #selector(playAgainTapped), for: .touchUpInside)
-        exitButton.addTarget(self, action: #selector(exitTapped), for: .touchUpInside)
-    }
-    
+
     private func configureImposterWon() {
-        iconView.image = UIImage(named: "Mafia") ?? UIImage(systemName: "crown.fill")
-        iconView.tintColor = .red
+        let myAvatar = UserDefaults.standard.string(forKey: "selectedAvatarFullImage") ?? "char1"
+        largeAvatarView.image = UIImage(named: myAvatar)
         
         resultLabel.text = "VICTORY!"
-        resultLabel.textColor = UIColor(red: 255/255, green: 72/255, blue: 72/255, alpha: 1)
+        resultLabel.textColor = .white
+        resultLabel.font = UIFont(name: "Aclonica-Regular", size: 36)
         
         subtitleLabel.text = "You fooled everyone!\nMaster of deception!"
+        subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.8)
         subtitleLabel.isHidden = false
     }
     
-    // ════════════════════════════════════════════════════════════════════
-    // MARK: - Crewmate Lost UI (for crewmates when imposter wins)
-    // ════════════════════════════════════════════════════════════════════
-    
-    private func setupCrewmateLostUI() {
-        view.backgroundColor = UIColor(red: 10/255, green: 20/255, blue: 45/255, alpha: 1)
-        
-        view.addSubview(bgImage)
-        view.addSubview(iconView)
-        view.addSubview(resultLabel)
-        view.addSubview(subtitleLabel)
-        view.addSubview(playAgainButton)
-        view.addSubview(exitButton)
-        
-        // Hide other elements
-        badgeBackground.isHidden = true
-        titleBadgeLabel.isHidden = true
-        largeAvatarView.isHidden = true
-        eliminatedAvatarView.isHidden = true
-        eliminatedLabel.isHidden = true
-        continueButton.isHidden = true
-        glowCircleView.isHidden = true
-        
-        NSLayoutConstraint.activate([
-            bgImage.topAnchor.constraint(equalTo: view.topAnchor),
-            bgImage.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            bgImage.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            bgImage.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            
-            iconView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 80),
-            iconView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: 180),
-            iconView.heightAnchor.constraint(equalToConstant: 180),
-            
-            resultLabel.topAnchor.constraint(equalTo: iconView.bottomAnchor, constant: 40),
-            resultLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
-            resultLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
-            
-            subtitleLabel.topAnchor.constraint(equalTo: resultLabel.bottomAnchor, constant: 20),
-            subtitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
-            subtitleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40),
-            
-            playAgainButton.bottomAnchor.constraint(equalTo: exitButton.topAnchor, constant: -20),
-            playAgainButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            playAgainButton.widthAnchor.constraint(equalToConstant: 260),
-            playAgainButton.heightAnchor.constraint(equalToConstant: 60),
-            
-            exitButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
-            exitButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            exitButton.widthAnchor.constraint(equalToConstant: 260),
-            exitButton.heightAnchor.constraint(equalToConstant: 60)
-        ])
-        
-        playAgainButton.addTarget(self, action: #selector(playAgainTapped), for: .touchUpInside)
-        exitButton.addTarget(self, action: #selector(exitTapped), for: .touchUpInside)
-    }
-    
+
     private func configureCrewmateLost() {
-        iconView.image = UIImage(systemName: "xmark.circle.fill")
-        iconView.tintColor = .red
+        let myAvatar = UserDefaults.standard.string(forKey: "selectedAvatarFullImage") ?? "char1"
+        largeAvatarView.image = UIImage(named: myAvatar)
         
         resultLabel.text = "YOU LOSE!"
         resultLabel.textColor = UIColor(red: 255/255, green: 72/255, blue: 72/255, alpha: 1)
+        resultLabel.font = UIFont(name: "Aclonica-Regular", size: 36)
         
         subtitleLabel.text = "The imposter won!\nTry to be more careful next time."
+        subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.8)
         subtitleLabel.isHidden = false
     }
     
@@ -542,12 +332,13 @@ final class GameResultViewController: UIViewController {
         
         // Hide final result UI elements
         iconView.isHidden = true
-        badgeBackground.isHidden = true
-        titleBadgeLabel.isHidden = true
+     //   badgeBackground.isHidden = true
+      //  titleBadgeLabel.isHidden = true
         eliminatedAvatarView.isHidden = true
         eliminatedLabel.isHidden = true
         playAgainButton.isHidden = true
         exitButton.isHidden = true
+        topTitleLabel.isHidden = true
         
         NSLayoutConstraint.activate([
             // Background
@@ -555,11 +346,6 @@ final class GameResultViewController: UIViewController {
             bgImage.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             bgImage.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bgImage.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            
-            // Top Title
-            topTitleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
-            topTitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            topTitleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
             // Blue glow circle (behind avatar)
             glowCircleView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -597,19 +383,17 @@ final class GameResultViewController: UIViewController {
         // Set avatar image of eliminated player
         largeAvatarView.image = UIImage(named: eliminatedAvatarImage) ?? UIImage(named: "char1")
         
-        topTitleLabel.text = "The group has\nmade a choice"
-        
-        // "[NAME] GOT BUSTED"
-        resultLabel.text = "\(eliminatedPlayerName.uppercased()) GOT BUSTED"
+        // "IT WASN'T [NAME]"
+        resultLabel.text = "IT WASN'T \(eliminatedPlayerName.uppercased())"
         resultLabel.textColor = .white
-        resultLabel.font = UIFont(name: "Aclonica-Regular", size: 28)
+        resultLabel.font = UIFont(name: "Aclonica-Regular", size: 36)
         
         // Subtitle
-        subtitleLabel.text = "Wait for the final results..."
+        subtitleLabel.text = "The Imposter is still among you"
         subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.8)
     }
     
-    private func drawBlueGlowCircle() {
+    private func drawRedGlowCircle() {
         // Remove existing layers
         glowCircleView.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
         
@@ -619,11 +403,11 @@ final class GameResultViewController: UIViewController {
         
         circleLayer.path = UIBezierPath(arcCenter: center, radius: radius, startAngle: 0, endAngle: .pi * 2, clockwise: true).cgPath
         circleLayer.fillColor = UIColor.clear.cgColor
-        circleLayer.strokeColor = UIColor(red: 0/255, green: 200/255, blue: 255/255, alpha: 0.8).cgColor
+        circleLayer.strokeColor = UIColor(red: 255/255, green: 50/255, blue: 50/255, alpha: 0.8).cgColor
         circleLayer.lineWidth = 4
         
         // Add glow effect
-        circleLayer.shadowColor = UIColor(red: 0/255, green: 200/255, blue: 255/255, alpha: 1).cgColor
+        circleLayer.shadowColor = UIColor.red.cgColor
         circleLayer.shadowRadius = 15
         circleLayer.shadowOpacity = 0.8
         circleLayer.shadowOffset = .zero
@@ -635,14 +419,14 @@ final class GameResultViewController: UIViewController {
     }
     
     private func addLightningEffect() {
-        let lightningColor = UIColor(red: 0/255, green: 200/255, blue: 255/255, alpha: 0.6).cgColor
+        let lightningColor = UIColor(red: 255/255, green: 50/255, blue: 50/255, alpha: 0.8).cgColor
         
         // Left lightning
         let leftPath = UIBezierPath()
         leftPath.move(to: CGPoint(x: 20, y: 150))
-        leftPath.addLine(to: CGPoint(x: 0, y: 140))
-        leftPath.addLine(to: CGPoint(x: 15, y: 130))
-        leftPath.addLine(to: CGPoint(x: -10, y: 110))
+        leftPath.addLine(to: CGPoint(x: -10, y: 130))
+        leftPath.addLine(to: CGPoint(x: 10, y: 110))
+        leftPath.addLine(to: CGPoint(x: -20, y: 80))
         
         let leftLayer = CAShapeLayer()
         leftLayer.path = leftPath.cgPath
@@ -653,10 +437,10 @@ final class GameResultViewController: UIViewController {
         
         // Right lightning
         let rightPath = UIBezierPath()
-        rightPath.move(to: CGPoint(x: 260, y: 150))
-        rightPath.addLine(to: CGPoint(x: 280, y: 140))
-        rightPath.addLine(to: CGPoint(x: 265, y: 130))
-        rightPath.addLine(to: CGPoint(x: 290, y: 110))
+        rightPath.move(to: CGPoint(x: 260, y: 140))
+        rightPath.addLine(to: CGPoint(x: 290, y: 120))
+        rightPath.addLine(to: CGPoint(x: 270, y: 100))
+        rightPath.addLine(to: CGPoint(x: 300, y: 70))
         
         let rightLayer = CAShapeLayer()
         rightLayer.path = rightPath.cgPath

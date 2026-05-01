@@ -21,6 +21,7 @@ final class RoomManager {
         let name: String
         let isHost: Bool
         let avatarImage: String?
+        let avatarFullImage: String?
         let avatarTitle: String?
     }
     
@@ -95,15 +96,16 @@ final class RoomManager {
         }
     }
     
-    // MARK: - Add Player
     func addPlayer(id: String, name: String, isHost: Bool, to roomCode: String, completion: @escaping (Error?) -> Void) {
-        let avatarImage = UserDefaults.standard.string(forKey: "selectedAvatarImage") ?? "char1"
+        let avatarImage = UserDefaults.standard.string(forKey: "selectedAvatarImage") ?? "char1_lobby"
+        let avatarFullImage = UserDefaults.standard.string(forKey: "selectedAvatarFullImage") ?? "char1"
         let avatarTitle = UserDefaults.standard.string(forKey: "selectedAvatarTitle") ?? "Shadow Hacker"
         
         let playerData: [String: Any] = [
             "name": name,
             "isHost": isHost,
             "avatarImage": avatarImage,
+            "avatarFullImage": avatarFullImage,
             "avatarTitle": avatarTitle,
             "joinedAt": FieldValue.serverTimestamp()
         ]
@@ -135,6 +137,7 @@ final class RoomManager {
                         name: data["name"] as? String ?? "Unknown",
                         isHost: data["isHost"] as? Bool ?? false,
                         avatarImage: data["avatarImage"] as? String,
+                        avatarFullImage: data["avatarFullImage"] as? String,
                         avatarTitle: data["avatarTitle"] as? String
                     )
                 }

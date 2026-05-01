@@ -1,4 +1,5 @@
 import UIKit
+import SwiftUI
 
 class JoinRoomViewController: UIViewController {
 
@@ -46,6 +47,21 @@ class JoinRoomViewController: UIViewController {
         return l
     }()
 
+    // MARK: - Instructions Button
+    private let instructionsButton: UIButton = {
+        let b = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 26, weight: .medium)
+        let image = UIImage(systemName: "info.circle.fill", withConfiguration: config)
+        b.setImage(image, for: .normal)
+        b.tintColor = .white
+        b.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        b.layer.cornerRadius = 22
+        b.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        b.layer.borderWidth = 1.5
+        b.translatesAutoresizingMaskIntoConstraints = false
+        return b
+    }()
+
     // MARK: - Buttons
     private let createButton: UIButton = {
         let b = UIButton(type: .system)
@@ -73,6 +89,41 @@ class JoinRoomViewController: UIViewController {
         return b
     }()
 
+    private let pulseButton: UIButton = {
+        let b = UIButton(type: .system)
+        b.setTitle("Pulse Protocol", for: .normal)
+        b.setTitleColor(.white, for: .normal)
+        b.titleLabel?.font = UIFont(name: "Aclonica-Regular", size: 32)
+        b.layer.cornerRadius = 25
+        b.layer.borderColor = UIColor.white.cgColor
+        b.layer.borderWidth = 3
+        b.backgroundColor = .clear
+        b.translatesAutoresizingMaskIntoConstraints = false
+        return b
+    }()
+    private func animatePulseButton() {
+        UIView.animate(
+            withDuration: 1.4,
+            delay: 0,
+            options: [.autoreverse, .repeat, .allowUserInteraction],
+            animations: {
+                self.pulseButton.transform = CGAffineTransform(scaleX: 1.05, y: 1.05)
+            }
+        )
+    }
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        if let gradient = pulseButton.layer.sublayers?.first as? CAGradientLayer {
+            gradient.frame = pulseButton.bounds
+        }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        animatePulseButton()
+    }
+
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -90,6 +141,8 @@ class JoinRoomViewController: UIViewController {
         view.addSubview(titleLabel)
         view.addSubview(createButton)
         view.addSubview(joinButton)
+        view.addSubview(pulseButton)
+        view.addSubview(instructionsButton)
 
         NSLayoutConstraint.activate([
             // Background
@@ -98,13 +151,19 @@ class JoinRoomViewController: UIViewController {
             backgroundImage.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             backgroundImage.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-            // Left Character - lower and bigger
+            // Instructions button (top-right corner)
+            instructionsButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
+            instructionsButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            instructionsButton.widthAnchor.constraint(equalToConstant: 44),
+            instructionsButton.heightAnchor.constraint(equalToConstant: 44),
+
+            // Left Character
             leftCharacter.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: -50),
             leftCharacter.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 60),
             leftCharacter.widthAnchor.constraint(equalToConstant: 350),
             leftCharacter.heightAnchor.constraint(equalToConstant: 530),
 
-            // Right Character - extreme edge, lower
+            // Right Character
             rightCharacter.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 50),
             rightCharacter.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 180),
             rightCharacter.widthAnchor.constraint(equalToConstant: 200),
@@ -116,21 +175,28 @@ class JoinRoomViewController: UIViewController {
             titleBanner.widthAnchor.constraint(equalToConstant: 360),
             titleBanner.heightAnchor.constraint(equalToConstant: 140),
 
-            // Title text
+            // Title label
             titleLabel.centerXAnchor.constraint(equalTo: titleBanner.centerXAnchor),
             titleLabel.centerYAnchor.constraint(equalTo: titleBanner.centerYAnchor),
 
-            // Create Room button
+            // Create button
             createButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             createButton.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 30),
             createButton.widthAnchor.constraint(equalToConstant: 280),
             createButton.heightAnchor.constraint(equalToConstant: 70),
 
-            // Join Room button
+            // Join button
             joinButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             joinButton.topAnchor.constraint(equalTo: createButton.bottomAnchor, constant: 25),
             joinButton.widthAnchor.constraint(equalToConstant: 280),
-            joinButton.heightAnchor.constraint(equalToConstant: 70)
+            joinButton.heightAnchor.constraint(equalToConstant: 70),
+
+            // PulseProtocol button
+            pulseButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            pulseButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 55),
+            pulseButton.widthAnchor.constraint(equalToConstant: 270),
+            pulseButton.heightAnchor.constraint(equalToConstant: 62)
+
         ])
     }
 
@@ -138,10 +204,11 @@ class JoinRoomViewController: UIViewController {
     private func setupActions() {
         createButton.addTarget(self, action: #selector(createTapped), for: .touchUpInside)
         joinButton.addTarget(self, action: #selector(joinTapped), for: .touchUpInside)
+        pulseButton.addTarget(self, action: #selector(openPulseProtocol), for: .touchUpInside)
+        instructionsButton.addTarget(self, action: #selector(instructionsTapped), for: .touchUpInside)
     }
 
     @objc private func joinTapped() {
-        // Navigate to room code entry screen
         let vc = RoomCodeEntry()
         navigationController?.pushViewController(vc, animated: true)
     }
@@ -151,11 +218,38 @@ class JoinRoomViewController: UIViewController {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let code):
-                    self?.navigationController?.pushViewController(CreateRoomViewController(roomCode: code), animated: true)
+                    self?.navigationController?.pushViewController(
+                        CreateRoomViewController(roomCode: code),
+                        animated: true
+                    )
                 case .failure(let error):
                     print("Create Err:", error)
                 }
             }
         }
+    }
+
+    // ✅ THIS IS THE ONLY CORRECT WAY TO OPEN SWIFTUI
+    @objc private func openPulseProtocol() {
+        let pulseView = PulseProtocolEntry.rootView()
+        let vc = UIHostingController(rootView: pulseView)
+        vc.view.backgroundColor = .clear
+
+        vc.modalPresentationStyle = .fullScreen
+        present(vc, animated: true)
+    }
+
+    @objc private func instructionsTapped() {
+        let vc = Instructions()
+        vc.modalPresentationStyle = .pageSheet
+        vc.modalTransitionStyle = .coverVertical
+
+        if let sheet = vc.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 28
+        }
+
+        present(vc, animated: true)
     }
 }
